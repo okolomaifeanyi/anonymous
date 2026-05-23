@@ -207,7 +207,15 @@ create policy "Members are readable" on public.organization_members
 
 create policy "Owners can manage members" on public.organization_members
   for insert
-  with check (auth.uid() = user_id);
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_members.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
 
 create policy "Votes are readable" on public.vote_items
   for select

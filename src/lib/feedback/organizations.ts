@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/server";
-import { createAdminClient } from "@/lib/supabase/server";
 
 type OwnedOrganization = {
   id: string;
@@ -29,6 +28,7 @@ export async function requireOwnedOrganization(code: string) {
     throw new Error("You must be signed in.");
   }
 
+  const { createAdminClient } = await import("@/lib/supabase/server");
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("organizations")
@@ -51,6 +51,7 @@ export async function requireOwnedOrganization(code: string) {
 }
 
 export async function getOrganizationByCodeForRoom(code: string) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("organizations")
