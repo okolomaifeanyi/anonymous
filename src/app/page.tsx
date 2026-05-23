@@ -1,64 +1,136 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRightIcon,
+  CheckBadgeIcon,
+  LockClosedIcon,
+  ShieldCheckIcon,
+} from "@heroicons/react/24/outline";
+
+import Breadcrumbs from "@/components/breadcrumbs";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="relative min-h-screen overflow-hidden bg-[#0b0f15] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-20 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" />
+        <div className="absolute right-0 top-32 h-80 w-80 rounded-full bg-violet-500/20 blur-[140px]" />
+        <div className="absolute bottom-10 left-1/3 h-72 w-72 rounded-full bg-amber-400/10 blur-[120px]" />
+      </div>
+
+      <main className="relative mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 pb-24 pt-10">
+        <Breadcrumbs />
+
+        <section className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.25em] text-white/70">
+              <ShieldCheckIcon className="h-4 w-4 text-emerald-300" />
+              Verified anonymous feedback
+            </div>
+            <h1 className="font-heading text-4xl leading-tight md:text-5xl">
+              Controlled internal voting with verified anonymous participation.
+            </h1>
+            <p className="max-w-2xl text-base text-white/70 md:text-lg">
+              Give administrators a secure shell to manage organizations, while
+              participants enter dedicated rooms to send honest feedback and
+              vote without public exposure.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
+              <span className="inline-flex items-center gap-2">
+                <CheckBadgeIcon className="h-5 w-5 text-white/80" />
+                Verified access
+              </span>
+              <span className="hidden h-4 w-px bg-white/20 md:block" />
+              <span className="inline-flex items-center gap-2">
+                <LockClosedIcon className="h-5 w-5 text-white/80" />
+                Private feedback rooms
+              </span>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/auth/login"
+                className="group inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#0b0f15] shadow-lg shadow-white/10 transition hover:-translate-y-0.5"
+              >
+                Admin sign in
+                <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </Link>
+              <Link
+                href="/room/pulse"
+                className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Enter room
+              </Link>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              {
+                title: "Admin-controlled organizations",
+                description:
+                  "Each organization gets a dedicated shell for oversight and follow-up.",
+                icon: ShieldCheckIcon,
+              },
+              {
+                title: "Scoped participant rooms",
+                description:
+                  "Participants enter focused spaces designed for anonymous feedback and voting.",
+                icon: LockClosedIcon,
+              },
+              {
+                title: "Decision-ready outputs",
+                description:
+                  "Collect trustworthy internal signals before acting on them.",
+                icon: CheckBadgeIcon,
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-3xl border border-white/10 bg-white/5 p-5"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+                    <item.icon className="h-5 w-5 text-emerald-200" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <p className="text-xs text-white/60">{item.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              label: "Verified entry",
+              value: "1",
+              caption: "Admins sign in before managing an organization",
+            },
+            {
+              label: "Anonymous channel",
+              value: "2",
+              caption: "Messages and voting stay separate from identity",
+            },
+            {
+              label: "Admin shell",
+              value: "3",
+              caption: "Overview, navigation, and organization controls",
+            },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/50">
+                {stat.label}
+              </p>
+              <p className="mt-3 text-3xl font-semibold">{stat.value}</p>
+              <p className="mt-2 text-xs text-white/60">{stat.caption}</p>
+            </div>
+          ))}
+        </section>
       </main>
     </div>
   );
