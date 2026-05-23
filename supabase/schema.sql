@@ -79,6 +79,21 @@ drop policy if exists "Anyone can vote" on public.vote_items;
 drop policy if exists "Messages are readable" on public.messages;
 drop policy if exists "Anyone can submit messages" on public.messages;
 
+drop policy if exists "Owners can read organization levels" on public.organization_levels;
+drop policy if exists "Owners can create organization levels" on public.organization_levels;
+drop policy if exists "Owners can update organization levels" on public.organization_levels;
+drop policy if exists "Owners can delete organization levels" on public.organization_levels;
+
+drop policy if exists "Owners can read organization participants" on public.organization_participants;
+drop policy if exists "Owners can create organization participants" on public.organization_participants;
+drop policy if exists "Owners can update organization participants" on public.organization_participants;
+drop policy if exists "Owners can delete organization participants" on public.organization_participants;
+
+drop policy if exists "Owners can read participant level assignments" on public.participant_level_assignments;
+drop policy if exists "Owners can create participant level assignments" on public.participant_level_assignments;
+drop policy if exists "Owners can update participant level assignments" on public.participant_level_assignments;
+drop policy if exists "Owners can delete participant level assignments" on public.participant_level_assignments;
+
 insert into public.organizations (id, name, code)
 values
   ('11111111-1111-1111-1111-111111111111', 'Team Pulse', 'pulse')
@@ -166,6 +181,9 @@ alter table public.organizations enable row level security;
 alter table public.organization_members enable row level security;
 alter table public.vote_items enable row level security;
 alter table public.messages enable row level security;
+alter table public.organization_levels enable row level security;
+alter table public.organization_participants enable row level security;
+alter table public.participant_level_assignments enable row level security;
 
 create policy "Organizations are readable" on public.organizations
   for select
@@ -210,3 +228,209 @@ create policy "Messages are readable" on public.messages
 create policy "Anyone can submit messages" on public.messages
   for insert
   with check (true);
+
+create policy "Owners can read organization levels" on public.organization_levels
+  for select
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_levels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create organization levels" on public.organization_levels
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_levels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update organization levels" on public.organization_levels
+  for update
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_levels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_levels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete organization levels" on public.organization_levels
+  for delete
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_levels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can read organization participants" on public.organization_participants
+  for select
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create organization participants" on public.organization_participants
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update organization participants" on public.organization_participants
+  for update
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete organization participants" on public.organization_participants
+  for delete
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = organization_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can read participant level assignments" on public.participant_level_assignments
+  for select
+  using (
+    exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = participant_level_assignments.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_levels
+      join public.organizations
+        on organizations.id = organization_levels.organization_id
+      where organization_levels.id = participant_level_assignments.level_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create participant level assignments" on public.participant_level_assignments
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = participant_level_assignments.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_levels
+      join public.organizations
+        on organizations.id = organization_levels.organization_id
+      where organization_levels.id = participant_level_assignments.level_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update participant level assignments" on public.participant_level_assignments
+  for update
+  using (
+    exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = participant_level_assignments.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_levels
+      join public.organizations
+        on organizations.id = organization_levels.organization_id
+      where organization_levels.id = participant_level_assignments.level_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = participant_level_assignments.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_levels
+      join public.organizations
+        on organizations.id = organization_levels.organization_id
+      where organization_levels.id = participant_level_assignments.level_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete participant level assignments" on public.participant_level_assignments
+  for delete
+  using (
+    exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = participant_level_assignments.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_levels
+      join public.organizations
+        on organizations.id = organization_levels.organization_id
+      where organization_levels.id = participant_level_assignments.level_id
+        and organizations.owner_id = auth.uid()
+    )
+  );

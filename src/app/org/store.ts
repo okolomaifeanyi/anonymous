@@ -25,6 +25,21 @@ async function generateUniqueCode(base: string) {
   }
 }
 
+async function rollbackOrganizationSetup(
+  organizationId: string,
+  reason: string,
+) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("organizations")
+    .delete()
+    .eq("id", organizationId);
+
+  if (error) {
+    console.error(`Org rollback error after ${reason}:`, error);
+  }
+}
+
 export async function createOrganization(name: string) {
   const trimmed = name.trim();
   if (!trimmed) {
@@ -79,6 +94,7 @@ export async function createOrganization(name: string) {
 
   if (levelError) {
     console.error('Level insert error:', levelError);
+    await rollbackOrganizationSetup(data.id, "level creation failure");
     throw new Error(`Failed to create organization levels: ${levelError.message}`);
   }
 
@@ -88,6 +104,7 @@ export async function createOrganization(name: string) {
 
   if (memberError) {
     console.error('Member insert error:', memberError);
+    await rollbackOrganizationSetup(data.id, "member creation failure");
     throw new Error(`Failed to create organization member: ${memberError.message}`);
   }
 
