@@ -6,6 +6,8 @@ This document defines the v1 product direction for the app as a verified interna
 
 The product is not a general public polling tool and not yet a full governance engine. In v1, the app should help an organizer collect honest anonymous messages and controlled votes from approved participants while deciding who can participate, who can see results, and who can review messages.
 
+The implementation should aggressively remove routes, concepts, and UI that do not support this v1 model. Speed, clarity, and operational efficiency take priority over preserving unused code paths.
+
 ## Product Intent
 
 The core problem is that people often vote or speak in ways that protect relationships, status, or hierarchy instead of telling the truth. The app should reduce that pressure without removing organizer control.
@@ -35,6 +37,7 @@ The intended model is:
 - organizer review of vote performance
 - organizer-controlled message reveal
 - organizer-controlled result visibility
+- removal of product paths and concepts that do not support this v1 experience
 
 ## Out of Scope for V1
 
@@ -46,6 +49,9 @@ The intended model is:
 - advanced analytics
 - moderation automation
 - multi-organization super admin
+- paid organization creation
+- ads and ad placements
+- subscription billing
 
 ## Primary Users
 
@@ -322,6 +328,16 @@ The participant room should not show a raw message wall unless the organizer has
 - separate admin control from participant action
 - support mobile-first interaction because many participants may verify and respond on phones
 - avoid showing empty decorative panels that do not help action or understanding
+- prefer fewer screens, fewer queries, and fewer decisions when the same outcome can be achieved more directly
+- remove demo behaviors that make the app look broader than it is
+
+## Performance and Efficiency Principles
+
+- ship the smallest coherent product that satisfies the v1 model
+- delete or retire routes that are outside the approved experience
+- avoid duplicate admin and participant flows
+- keep server-side boundaries simple so access rules stay fast and understandable
+- avoid building billing, ads, or growth mechanics before the core feedback loop is trustworthy
 
 ## Accessibility Requirements
 
@@ -369,6 +385,8 @@ The implementation should move toward:
 
 The current `src/app/org/*` routes can serve as transitional material, but they should not remain the final information architecture for v1.
 
+Anything that does not support the approved v1 flow should be deleted, not carried forward "just in case". The target is a faster and simpler codebase with fewer branches, fewer duplicate stores, and fewer user-facing concepts.
+
 ## Risks and Mitigations
 
 ### Risk: scope expansion into governance
@@ -398,6 +416,27 @@ Mitigation:
 - clearly explain that identity is verified for access control
 - clearly explain that submissions and votes are anonymous to peers
 
+### Risk: early monetization damages trust or speed
+
+Charging for organization creation or inserting ads too early can complicate the onboarding flow, slow the product, and weaken trust in an anonymity-focused system.
+
+Mitigation:
+
+- keep v1 focused on core utility
+- revisit monetization only after the organizer and participant flows are clear and stable
+
+## Monetization Direction for Later
+
+Monetization should be discussed after the v1 product is working clearly.
+
+The most compatible later options are:
+
+- charge organizers to create or run additional organizations
+- offer premium admin controls or higher usage limits
+- allow limited, low-noise ads only if they do not appear inside sensitive anonymous submission moments
+
+The recommended default is to delay ads in the participant room because that area depends heavily on trust, focus, and fast completion. If ads are explored later, they should be minimal and placed away from core submission and voting actions.
+
 ## Success Criteria
 
 V1 is successful if:
@@ -419,5 +458,6 @@ Build v1 as an admin-controlled anonymous feedback system with:
 - approved identity-based access
 - controlled vote visibility
 - private-by-default messages
+- removal of all non-essential routes and concepts outside this plan
 
 This direction matches the user intent and simplifies the current app into a product that is easier to understand, easier to use, and structurally ready for later governance features.
