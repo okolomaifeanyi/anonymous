@@ -22,6 +22,7 @@ type VoteAdminClient = {
       values: {
         vote_id: string;
         participant_id: string;
+        organization_id: string;
         choice: VoteChoice;
       },
       options: {
@@ -120,6 +121,7 @@ export async function upsertVoteBallot({
       {
         vote_id: voteId,
         participant_id: participantId,
+        organization_id: voteOrganizationId,
         choice,
       },
       {

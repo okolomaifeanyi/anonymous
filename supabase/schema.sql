@@ -74,12 +74,14 @@ create table if not exists public.votes (
   eligible_level_ids uuid[] not null default '{}',
   live_result_level_ids uuid[] not null default '{}',
   final_result_level_ids uuid[] not null default '{}',
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (id, organization_id)
 );
 
 create table if not exists public.vote_ballots (
   vote_id uuid not null references public.votes(id) on delete cascade,
   participant_id uuid not null references public.organization_participants(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
   choice text not null,
   created_at timestamptz not null default now(),
   primary key (vote_id, participant_id)
@@ -93,17 +95,100 @@ create table if not exists public.message_channels (
   status text not null default 'draft',
   submit_level_ids uuid[] not null default '{}',
   reveal_level_ids uuid[] not null default '{}',
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (id, organization_id)
 );
 
 create table if not exists public.message_entries (
   id uuid primary key default gen_random_uuid(),
   channel_id uuid not null references public.message_channels(id) on delete cascade,
   participant_id uuid not null references public.organization_participants(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
   body text not null,
   revealed boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter table public.organization_participants
+  drop constraint if exists organization_participants_id_organization_id_key;
+
+alter table public.organization_participants
+  add constraint organization_participants_id_organization_id_key
+  unique (id, organization_id);
+
+alter table public.votes
+  drop constraint if exists votes_id_organization_id_key;
+
+alter table public.votes
+  add constraint votes_id_organization_id_key
+  unique (id, organization_id);
+
+alter table public.message_channels
+  drop constraint if exists message_channels_id_organization_id_key;
+
+alter table public.message_channels
+  add constraint message_channels_id_organization_id_key
+  unique (id, organization_id);
+
+alter table public.vote_ballots
+  add column if not exists organization_id uuid references public.organizations(id) on delete cascade;
+
+update public.vote_ballots
+  set organization_id = votes.organization_id
+  from public.votes
+  where votes.id = vote_ballots.vote_id
+    and vote_ballots.organization_id is null;
+
+alter table public.vote_ballots
+  alter column organization_id set not null;
+
+alter table public.vote_ballots
+  drop constraint if exists vote_ballots_vote_id_organization_id_fkey;
+
+alter table public.vote_ballots
+  add constraint vote_ballots_vote_id_organization_id_fkey
+  foreign key (vote_id, organization_id)
+  references public.votes(id, organization_id)
+  on delete cascade;
+
+alter table public.vote_ballots
+  drop constraint if exists vote_ballots_participant_id_organization_id_fkey;
+
+alter table public.vote_ballots
+  add constraint vote_ballots_participant_id_organization_id_fkey
+  foreign key (participant_id, organization_id)
+  references public.organization_participants(id, organization_id)
+  on delete cascade;
+
+alter table public.message_entries
+  add column if not exists organization_id uuid references public.organizations(id) on delete cascade;
+
+update public.message_entries
+  set organization_id = message_channels.organization_id
+  from public.message_channels
+  where message_channels.id = message_entries.channel_id
+    and message_entries.organization_id is null;
+
+alter table public.message_entries
+  alter column organization_id set not null;
+
+alter table public.message_entries
+  drop constraint if exists message_entries_channel_id_organization_id_fkey;
+
+alter table public.message_entries
+  add constraint message_entries_channel_id_organization_id_fkey
+  foreign key (channel_id, organization_id)
+  references public.message_channels(id, organization_id)
+  on delete cascade;
+
+alter table public.message_entries
+  drop constraint if exists message_entries_participant_id_organization_id_fkey;
+
+alter table public.message_entries
+  add constraint message_entries_participant_id_organization_id_fkey
+  foreign key (participant_id, organization_id)
+  references public.organization_participants(id, organization_id)
+  on delete cascade;
 
 alter table public.votes
   drop constraint if exists votes_status_check;
