@@ -6,7 +6,7 @@ import { ChevronRightIcon, HomeIcon } from "@heroicons/react/24/outline";
 
 const labelMap: Record<string, string> = {
   admin: "Admin",
-  auth: "Auth",
+  login: "Admin sign in",
   org: "Organization",
   participants: "Participants",
   levels: "Levels",
@@ -69,14 +69,20 @@ export default function Breadcrumbs() {
   const pathname = usePathname() || "/";
   const segments = pathname.split("/").filter(Boolean);
 
-  const crumbs = segments.map((segment, index) => {
-    const href = `/${segments.slice(0, index + 1).join("/")}`;
-    return {
-      href,
-      label: toLabel(segment),
-      linkable: isLinkableCrumb(segments, index),
-    };
-  });
+  const crumbs = segments
+    .map((segment, index) => {
+      if (segments[0] === "auth" && index === 0) {
+        return null;
+      }
+
+      const href = `/${segments.slice(0, index + 1).join("/")}`;
+      return {
+        href,
+        label: toLabel(segment),
+        linkable: isLinkableCrumb(segments, index),
+      };
+    })
+    .filter((crumb): crumb is NonNullable<typeof crumb> => Boolean(crumb));
 
   return (
     <nav
