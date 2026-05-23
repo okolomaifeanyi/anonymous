@@ -17,7 +17,7 @@ export function normalizeIdentifierValue(
   }
 
   if (type === "phone") {
-    return trimmed.replace(/(?!^\+)[^\d]/g, "").replace(/^\++/, "+");
+    return trimmed.replace(/[^\d+]/g, "");
   }
 
   return trimmed;
