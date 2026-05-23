@@ -1,3 +1,5 @@
+import type { IdentifierType } from "@/lib/feedback/types";
+
 import { createClient } from "@/lib/server";
 import { notFound } from "next/navigation";
 
@@ -6,7 +8,7 @@ type OwnedOrganization = {
   name: string;
   code: string;
   owner_id: string | null;
-  participant_identifier_type: string;
+  participant_identifier_type: IdentifierType;
   participant_identifier_label: string;
 };
 
@@ -14,7 +16,7 @@ type RoomOrganization = {
   id: string;
   name: string;
   code: string;
-  participant_identifier_type: string;
+  participant_identifier_type: IdentifierType;
   participant_identifier_label: string;
 };
 
