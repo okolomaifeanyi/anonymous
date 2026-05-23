@@ -12,6 +12,7 @@ describe("feedback audience policy", () => {
 
     expect(canAccessAudience(participant.levelIds, ["executive"])).toBe(true);
     expect(canAccessAudience(participant.levelIds, ["chapter"])).toBe(false);
+    expect(canAccessAudience([], [])).toBe(false);
   });
 
   it("canSeeVoteResults hides vote results from unauthorized viewers", () => {
@@ -31,6 +32,13 @@ describe("feedback audience policy", () => {
         finalResultLevelIds: ["executive"],
       }),
     ).toBe(false);
+    expect(
+      canSeeVoteResults(["public"], {
+        status: "closed",
+        liveResultLevelIds: ["executive"],
+        finalResultLevelIds: ["public"],
+      }),
+    ).toBe(true);
   });
 
   it("getVisibleParticipantRoomSections builds a participant room model from eligible items only", () => {
@@ -62,11 +70,20 @@ describe("feedback audience policy", () => {
           submitLevelIds: ["public"],
           revealLevelIds: [],
         },
+        {
+          id: "msg-2",
+          title: "Leadership notes",
+          status: "open",
+          submitLevelIds: ["executive"],
+          revealLevelIds: [],
+        },
       ],
     });
 
     expect(room.votes).toHaveLength(1);
+    expect(room.votes.map((vote) => vote.id)).toEqual(["vote-1"]);
     expect(room.messageChannels).toHaveLength(1);
+    expect(room.messageChannels.map((channel) => channel.id)).toEqual(["msg-1"]);
     expect(room.resultsVisible).toBe(true);
   });
 });
