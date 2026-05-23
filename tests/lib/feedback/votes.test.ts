@@ -8,7 +8,10 @@ import { createAdminClient } from "@/lib/supabase/server";
 import filterRevealedMessages, {
   revealMessageEntry,
 } from "@/lib/feedback/messages";
-import countVoteChoices, { upsertVoteBallot } from "@/lib/feedback/votes";
+import countVoteChoices, {
+  parseVoteInput,
+  upsertVoteBallot,
+} from "@/lib/feedback/votes";
 
 function createSelectQuery(result: {
   data: { organization_id: string } | null;
@@ -73,6 +76,52 @@ describe("feedback vote and message helpers", () => {
       support: 2,
       oppose: 1,
       total: 3,
+    });
+  });
+
+  it("parseVoteInput rejects blank vote titles", () => {
+    expect(() =>
+      parseVoteInput({
+        title: "   ",
+        description: "Discuss the proposal",
+        tag: "General",
+        eligibleLevelIds: ["level-1"],
+        liveResultLevelIds: ["level-1"],
+        finalResultLevelIds: ["level-1"],
+      }),
+    ).toThrow("Vote title is required.");
+  });
+
+  it("parseVoteInput requires at least one eligible level", () => {
+    expect(() =>
+      parseVoteInput({
+        title: "Approve the budget",
+        description: "Discuss the proposal",
+        tag: "General",
+        eligibleLevelIds: [],
+        liveResultLevelIds: ["level-1"],
+        finalResultLevelIds: ["level-1"],
+      }),
+    ).toThrow("At least one eligible level is required.");
+  });
+
+  it("parseVoteInput trims fields, defaults the tag, and deduplicates level ids", () => {
+    expect(
+      parseVoteInput({
+        title: "  Approve the budget  ",
+        description: "  Discuss the proposal  ",
+        tag: "   ",
+        eligibleLevelIds: [" level-1 ", "level-2", "level-1", ""],
+        liveResultLevelIds: [" level-2 ", "level-2", ""],
+        finalResultLevelIds: [" level-3 ", "", "level-3"],
+      }),
+    ).toEqual({
+      title: "Approve the budget",
+      description: "Discuss the proposal",
+      tag: "General",
+      eligibleLevelIds: ["level-1", "level-2"],
+      liveResultLevelIds: ["level-2"],
+      finalResultLevelIds: ["level-3"],
     });
   });
 

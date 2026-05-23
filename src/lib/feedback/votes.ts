@@ -1,4 +1,18 @@
+import type { VoteStatus } from "@/lib/feedback/types";
+
 export type VoteChoice = "support" | "oppose";
+
+export type OrganizationVote = {
+  id: string;
+  title: string;
+  description: string;
+  tag: string;
+  status: VoteStatus;
+  eligible_level_ids: string[];
+  live_result_level_ids: string[];
+  final_result_level_ids: string[];
+  created_at: string;
+};
 
 type VoteBallot = {
   choice: VoteChoice;
@@ -49,6 +63,47 @@ type UpsertVoteBallotInput = {
   participantId: string;
   choice: VoteChoice;
 };
+
+type ParseVoteInput = {
+  title: string;
+  description: string;
+  tag: string;
+  eligibleLevelIds: string[];
+  liveResultLevelIds: string[];
+  finalResultLevelIds: string[];
+};
+
+type CreateVoteInput = ParseVoteInput & {
+  organizationId: string;
+  status: VoteStatus;
+};
+
+function normalizeLevelIds(levelIds: string[]) {
+  return [...new Set(levelIds.map((value) => value.trim()).filter(Boolean))];
+}
+
+export function parseVoteInput(input: ParseVoteInput) {
+  const title = input.title.trim();
+
+  if (!title) {
+    throw new Error("Vote title is required.");
+  }
+
+  const eligibleLevelIds = normalizeLevelIds(input.eligibleLevelIds);
+
+  if (eligibleLevelIds.length === 0) {
+    throw new Error("At least one eligible level is required.");
+  }
+
+  return {
+    title,
+    description: input.description.trim(),
+    tag: input.tag.trim() || "General",
+    eligibleLevelIds,
+    liveResultLevelIds: normalizeLevelIds(input.liveResultLevelIds),
+    finalResultLevelIds: normalizeLevelIds(input.finalResultLevelIds),
+  };
+}
 
 export function countVoteChoices(ballots: VoteBallot[]) {
   return ballots.reduce(
@@ -136,6 +191,52 @@ export async function upsertVoteBallot({
   }
 
   return data;
+}
+
+export async function createVote(input: CreateVoteInput) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const vote = parseVoteInput(input);
+  const { data, error } = await supabase
+    .from("votes")
+    .insert({
+      organization_id: input.organizationId,
+      title: vote.title,
+      description: vote.description,
+      tag: vote.tag,
+      eligible_level_ids: vote.eligibleLevelIds,
+      live_result_level_ids: vote.liveResultLevelIds,
+      final_result_level_ids: vote.finalResultLevelIds,
+      status: input.status,
+    })
+    .select(
+      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
+    )
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create vote: ${error.message}`);
+  }
+
+  return data as OrganizationVote;
+}
+
+export async function listVotes(organizationId: string) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("votes")
+    .select(
+      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
+    )
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load votes: ${error.message}`);
+  }
+
+  return (data ?? []) as OrganizationVote[];
 }
 
 export default countVoteChoices;
