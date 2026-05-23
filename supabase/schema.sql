@@ -64,6 +64,47 @@ create table if not exists public.participant_level_assignments (
   primary key (participant_id, level_id)
 );
 
+create table if not exists public.votes (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  title text not null,
+  description text not null default '',
+  tag text not null default 'General',
+  status text not null default 'draft',
+  eligible_level_ids uuid[] not null default '{}',
+  live_result_level_ids uuid[] not null default '{}',
+  final_result_level_ids uuid[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.vote_ballots (
+  vote_id uuid not null references public.votes(id) on delete cascade,
+  participant_id uuid not null references public.organization_participants(id) on delete cascade,
+  choice text not null,
+  created_at timestamptz not null default now(),
+  primary key (vote_id, participant_id)
+);
+
+create table if not exists public.message_channels (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  title text not null,
+  prompt text not null,
+  status text not null default 'draft',
+  submit_level_ids uuid[] not null default '{}',
+  reveal_level_ids uuid[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.message_entries (
+  id uuid primary key default gen_random_uuid(),
+  channel_id uuid not null references public.message_channels(id) on delete cascade,
+  participant_id uuid not null references public.organization_participants(id) on delete cascade,
+  body text not null,
+  revealed boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
 drop policy if exists "Organizations are readable" on public.organizations;
 drop policy if exists "Owners can create organizations" on public.organizations;
 drop policy if exists "Owners can update organizations" on public.organizations;
