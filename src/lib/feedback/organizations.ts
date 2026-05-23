@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/server";
+import { notFound, redirect } from "next/navigation";
 
 type OwnedOrganization = {
   id: string;
@@ -25,7 +26,7 @@ export async function requireOwnedOrganization(code: string) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    throw new Error("You must be signed in.");
+    redirect("/auth/login");
   }
 
   const { createAdminClient } = await import("@/lib/supabase/server");
@@ -44,7 +45,7 @@ export async function requireOwnedOrganization(code: string) {
   }
 
   if (!data) {
-    throw new Error("Organization not found.");
+    notFound();
   }
 
   return data as OwnedOrganization;
