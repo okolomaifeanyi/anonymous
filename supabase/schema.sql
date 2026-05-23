@@ -105,6 +105,27 @@ create table if not exists public.message_entries (
   created_at timestamptz not null default now()
 );
 
+alter table public.votes
+  drop constraint if exists votes_status_check;
+
+alter table public.votes
+  add constraint votes_status_check
+  check (status in ('draft', 'active', 'closed'));
+
+alter table public.vote_ballots
+  drop constraint if exists vote_ballots_choice_check;
+
+alter table public.vote_ballots
+  add constraint vote_ballots_choice_check
+  check (choice in ('support', 'oppose'));
+
+alter table public.message_channels
+  drop constraint if exists message_channels_status_check;
+
+alter table public.message_channels
+  add constraint message_channels_status_check
+  check (status in ('draft', 'open', 'closed'));
+
 drop policy if exists "Organizations are readable" on public.organizations;
 drop policy if exists "Owners can create organizations" on public.organizations;
 drop policy if exists "Owners can update organizations" on public.organizations;
@@ -134,6 +155,26 @@ drop policy if exists "Owners can read participant level assignments" on public.
 drop policy if exists "Owners can create participant level assignments" on public.participant_level_assignments;
 drop policy if exists "Owners can update participant level assignments" on public.participant_level_assignments;
 drop policy if exists "Owners can delete participant level assignments" on public.participant_level_assignments;
+
+drop policy if exists "Owners can read votes" on public.votes;
+drop policy if exists "Owners can create votes" on public.votes;
+drop policy if exists "Owners can update votes" on public.votes;
+drop policy if exists "Owners can delete votes" on public.votes;
+
+drop policy if exists "Owners can read vote ballots" on public.vote_ballots;
+drop policy if exists "Owners can create vote ballots" on public.vote_ballots;
+drop policy if exists "Owners can update vote ballots" on public.vote_ballots;
+drop policy if exists "Owners can delete vote ballots" on public.vote_ballots;
+
+drop policy if exists "Owners can read message channels" on public.message_channels;
+drop policy if exists "Owners can create message channels" on public.message_channels;
+drop policy if exists "Owners can update message channels" on public.message_channels;
+drop policy if exists "Owners can delete message channels" on public.message_channels;
+
+drop policy if exists "Owners can read message entries" on public.message_entries;
+drop policy if exists "Owners can create message entries" on public.message_entries;
+drop policy if exists "Owners can update message entries" on public.message_entries;
+drop policy if exists "Owners can delete message entries" on public.message_entries;
 
 insert into public.organizations (id, name, code)
 values
@@ -225,6 +266,10 @@ alter table public.messages enable row level security;
 alter table public.organization_levels enable row level security;
 alter table public.organization_participants enable row level security;
 alter table public.participant_level_assignments enable row level security;
+alter table public.votes enable row level security;
+alter table public.vote_ballots enable row level security;
+alter table public.message_channels enable row level security;
+alter table public.message_entries enable row level security;
 
 create policy "Organizations are readable" on public.organizations
   for select
@@ -480,6 +525,314 @@ create policy "Owners can delete participant level assignments" on public.partic
       join public.organizations
         on organizations.id = organization_levels.organization_id
       where organization_levels.id = participant_level_assignments.level_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can read votes" on public.votes
+  for select
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = votes.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create votes" on public.votes
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = votes.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update votes" on public.votes
+  for update
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = votes.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = votes.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete votes" on public.votes
+  for delete
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = votes.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can read vote ballots" on public.vote_ballots
+  for select
+  using (
+    exists (
+      select 1
+      from public.votes
+      join public.organizations
+        on organizations.id = votes.organization_id
+      where votes.id = vote_ballots.vote_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = vote_ballots.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create vote ballots" on public.vote_ballots
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.votes
+      join public.organizations
+        on organizations.id = votes.organization_id
+      where votes.id = vote_ballots.vote_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = vote_ballots.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update vote ballots" on public.vote_ballots
+  for update
+  using (
+    exists (
+      select 1
+      from public.votes
+      join public.organizations
+        on organizations.id = votes.organization_id
+      where votes.id = vote_ballots.vote_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = vote_ballots.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.votes
+      join public.organizations
+        on organizations.id = votes.organization_id
+      where votes.id = vote_ballots.vote_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = vote_ballots.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete vote ballots" on public.vote_ballots
+  for delete
+  using (
+    exists (
+      select 1
+      from public.votes
+      join public.organizations
+        on organizations.id = votes.organization_id
+      where votes.id = vote_ballots.vote_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = vote_ballots.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can read message channels" on public.message_channels
+  for select
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create message channels" on public.message_channels
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update message channels" on public.message_channels
+  for update
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete message channels" on public.message_channels
+  for delete
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can read message entries" on public.message_entries
+  for select
+  using (
+    exists (
+      select 1
+      from public.message_channels
+      join public.organizations
+        on organizations.id = message_channels.organization_id
+      where message_channels.id = message_entries.channel_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = message_entries.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create message entries" on public.message_entries
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.message_channels
+      join public.organizations
+        on organizations.id = message_channels.organization_id
+      where message_channels.id = message_entries.channel_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = message_entries.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update message entries" on public.message_entries
+  for update
+  using (
+    exists (
+      select 1
+      from public.message_channels
+      join public.organizations
+        on organizations.id = message_channels.organization_id
+      where message_channels.id = message_entries.channel_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = message_entries.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.message_channels
+      join public.organizations
+        on organizations.id = message_channels.organization_id
+      where message_channels.id = message_entries.channel_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = message_entries.participant_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete message entries" on public.message_entries
+  for delete
+  using (
+    exists (
+      select 1
+      from public.message_channels
+      join public.organizations
+        on organizations.id = message_channels.organization_id
+      where message_channels.id = message_entries.channel_id
+        and organizations.owner_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.organization_participants
+      join public.organizations
+        on organizations.id = organization_participants.organization_id
+      where organization_participants.id = message_entries.participant_id
         and organizations.owner_id = auth.uid()
     )
   );

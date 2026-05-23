@@ -4,6 +4,45 @@ type VoteBallot = {
   choice: VoteChoice;
 };
 
+type OrganizationLookup = {
+  organization_id: string;
+};
+
+type VoteAdminClient = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        single: () => Promise<{
+          data: OrganizationLookup | null;
+          error: { message: string } | null;
+        }>;
+      };
+    };
+    upsert: (
+      values: {
+        vote_id: string;
+        participant_id: string;
+        choice: VoteChoice;
+      },
+      options: {
+        onConflict: string;
+      },
+    ) => {
+      select: (columns: string) => {
+        single: () => Promise<{
+          data: {
+            vote_id: string;
+            participant_id: string;
+            choice: VoteChoice;
+            created_at: string;
+          } | null;
+          error: { message: string } | null;
+        }>;
+      };
+    };
+  };
+};
+
 type UpsertVoteBallotInput = {
   voteId: string;
   participantId: string;
@@ -28,13 +67,53 @@ export function countVoteChoices(ballots: VoteBallot[]) {
   );
 }
 
+async function selectOrganizationId(
+  supabase: VoteAdminClient,
+  table: string,
+  id: string,
+  label: string,
+) {
+  const { data, error } = await supabase
+    .from(table)
+    .select("organization_id")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to load ${label} organization: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error(`${label} not found.`);
+  }
+
+  return data.organization_id;
+}
+
 export async function upsertVoteBallot({
   voteId,
   participantId,
   choice,
 }: UpsertVoteBallotInput) {
   const { createAdminClient } = await import("@/lib/supabase/server");
-  const supabase = createAdminClient();
+  const supabase = createAdminClient() as unknown as VoteAdminClient;
+  const voteOrganizationId = await selectOrganizationId(
+    supabase,
+    "votes",
+    voteId,
+    "Vote",
+  );
+  const participantOrganizationId = await selectOrganizationId(
+    supabase,
+    "organization_participants",
+    participantId,
+    "Participant",
+  );
+
+  if (voteOrganizationId !== participantOrganizationId) {
+    throw new Error("Vote and participant must belong to the same organization.");
+  }
+
   const { data, error } = await supabase
     .from("vote_ballots")
     .upsert(
