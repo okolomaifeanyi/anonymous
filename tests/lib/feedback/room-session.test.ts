@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildRoomCookieName,
+  encodeRoomSession,
   parseRoomSession,
   serializeRoomSession,
 } from "@/lib/feedback/room-session";
 
 describe("room session helpers", () => {
+  process.env.ROOM_SESSION_SECRET = "test-room-session-secret";
+
   it("builds a stable cookie name per organization", () => {
     expect(buildRoomCookieName("org-123")).toBe("anon-room-org-123");
   });
@@ -26,7 +29,7 @@ describe("room session helpers", () => {
   it("parses a serialized participant room session", () => {
     expect(
       parseRoomSession(
-        JSON.stringify({
+        encodeRoomSession({
           organizationId: "org-123",
           participantId: "part-456",
         }),
@@ -38,7 +41,27 @@ describe("room session helpers", () => {
   });
 
   it("rejects malformed participant room session payloads", () => {
-    expect(parseRoomSession('{"organizationId":"org-123"}')).toBeNull();
+    expect(
+      parseRoomSession(
+        `${Buffer.from(
+          JSON.stringify({
+            organizationId: "org-123",
+          }),
+          "utf8",
+        ).toString("base64url")}.bad-signature`,
+      ),
+    ).toBeNull();
+    expect(
+      parseRoomSession(
+        `${Buffer.from(
+          JSON.stringify({
+            organizationId: "org-123",
+            participantId: "part-456",
+          }),
+          "utf8",
+        ).toString("base64url")}.bad-signature`,
+      ),
+    ).toBeNull();
     expect(parseRoomSession("not-json")).toBeNull();
     expect(parseRoomSession("")).toBeNull();
   });

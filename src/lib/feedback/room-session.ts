@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 export type RoomSession = {
@@ -6,6 +7,25 @@ export type RoomSession = {
 };
 
 const ROOM_SESSION_MAX_AGE_SECONDS = 60 * 60 * 12;
+
+function getRoomSessionSecret() {
+  const secret =
+    process.env.ROOM_SESSION_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!secret) {
+    throw new Error(
+      "Missing room session secret. Set ROOM_SESSION_SECRET or SUPABASE_SERVICE_ROLE_KEY.",
+    );
+  }
+
+  return secret;
+}
+
+function signRoomSessionPayload(payload: string) {
+  return createHmac("sha256", getRoomSessionSecret())
+    .update(payload)
+    .digest("base64url");
+}
 
 export function buildRoomCookieName(organizationId: string) {
   return `anon-room-${organizationId}`;
@@ -18,6 +38,15 @@ export function serializeRoomSession(input: RoomSession): RoomSession {
   };
 }
 
+export function encodeRoomSession(input: RoomSession) {
+  const payload = Buffer.from(
+    JSON.stringify(serializeRoomSession(input)),
+    "utf8",
+  ).toString("base64url");
+
+  return `${payload}.${signRoomSessionPayload(payload)}`;
+}
+
 export function parseRoomSession(
   value: string | null | undefined,
 ): RoomSession | null {
@@ -26,7 +55,26 @@ export function parseRoomSession(
   }
 
   try {
-    const parsed = JSON.parse(value) as Partial<RoomSession>;
+    const [payload, providedSignature, ...rest] = value.split(".");
+
+    if (!payload || !providedSignature || rest.length > 0) {
+      return null;
+    }
+
+    const expectedSignature = signRoomSessionPayload(payload);
+    const providedBuffer = Buffer.from(providedSignature);
+    const expectedBuffer = Buffer.from(expectedSignature);
+
+    if (
+      providedBuffer.length !== expectedBuffer.length ||
+      !timingSafeEqual(providedBuffer, expectedBuffer)
+    ) {
+      return null;
+    }
+
+    const parsed = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8"),
+    ) as Partial<RoomSession>;
 
     if (
       typeof parsed.organizationId !== "string" ||
@@ -59,7 +107,7 @@ export async function setRoomSession(input: RoomSession) {
 
   cookieStore.set(
     buildRoomCookieName(input.organizationId),
-    JSON.stringify(serializeRoomSession(input)),
+    encodeRoomSession(input),
     {
       httpOnly: true,
       maxAge: ROOM_SESSION_MAX_AGE_SECONDS,
