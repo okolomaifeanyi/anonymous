@@ -9,6 +9,7 @@ export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{
+    cooldown?: string;
     sent?: string;
     error?: string;
     message?: string;
@@ -18,6 +19,9 @@ export default async function LoginPage({
   const sent = resolved?.sent === "1";
   const errorMessage = resolved?.message?.trim() || null;
   const hasError = Boolean(resolved?.error || errorMessage);
+  const parsedCooldown = Number.parseInt(resolved?.cooldown ?? "", 10);
+  const initialCooldown =
+    Number.isFinite(parsedCooldown) && parsedCooldown > 0 ? parsedCooldown : 0;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0b0f15] text-white">
@@ -55,7 +59,10 @@ export default async function LoginPage({
                 className="w-full bg-transparent text-sm text-white/90 placeholder:text-white/40 focus:outline-none"
               />
             </div>
-            <SubmitButton />
+            <SubmitButton
+              key={`${resolved?.sent ?? "0"}:${resolved?.error ?? "none"}:${initialCooldown}`}
+              initialCooldown={initialCooldown}
+            />
           </form>
           {sent && (
             <p className="mt-4 text-center text-xs text-emerald-200">

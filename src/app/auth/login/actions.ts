@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/server";
 
+const MAGIC_LINK_COOLDOWN_SECONDS = 60;
+
 function buildLoginRedirect(params: Record<string, string>) {
   const searchParams = new URLSearchParams(params);
   return `/auth/login?${searchParams.toString()}`;
@@ -43,8 +45,7 @@ export async function requestMagicLink(formData: FormData) {
   }
 
   let redirectParams:
-    | { error: string; message: string }
-    | { sent: string }
+    | Record<string, string>
     | null = null;
 
   try {
@@ -72,9 +73,15 @@ export async function requestMagicLink(formData: FormData) {
           error.code === "over_email_send_rate_limit"
             ? "Too many magic links were sent. Wait a minute and try again."
             : error.message || "Could not send magic link.",
+        ...(error.code === "over_email_send_rate_limit"
+          ? { cooldown: String(MAGIC_LINK_COOLDOWN_SECONDS) }
+          : {}),
       };
     } else {
-      redirectParams = { sent: "1" };
+      redirectParams = {
+        sent: "1",
+        cooldown: String(MAGIC_LINK_COOLDOWN_SECONDS),
+      };
     }
   } catch (error) {
     const message =
