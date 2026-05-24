@@ -13,7 +13,6 @@ const labelMap: Record<string, string> = {
   votes: "Votes",
   room: "Room",
   space: "Space",
-  vote: "Vote",
   messages: "Messages",
   new: "New",
 };
