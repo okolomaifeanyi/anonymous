@@ -317,7 +317,7 @@ export async function listMessageEntries(organizationId: string) {
   const { data, error } = await supabase
     .from("message_entries")
     .select(
-      "id,channel_id,participant_id,body,revealed,created_at,message_channels!inner(title,organization_id)",
+      "id,channel_id,participant_id,body,revealed,created_at,message_channels!message_entries_channel_id_organization_id_fkey!inner(title,organization_id)",
     )
     .eq("message_channels.organization_id", organizationId)
     .order("created_at", { ascending: false });
@@ -378,7 +378,7 @@ export async function listParticipantRoomRevealedMessages(
   const { data, error } = await supabase
     .from("message_entries")
     .select(
-      "id,body,revealed,created_at,channel_id,message_channels!inner(title,organization_id,reveal_level_ids)",
+      "id,body,revealed,created_at,channel_id,message_channels!message_entries_channel_id_organization_id_fkey!inner(title,organization_id,reveal_level_ids)",
     )
     .eq("organization_id", organizationId)
     .eq("revealed", true)
