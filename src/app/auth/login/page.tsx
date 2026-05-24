@@ -8,11 +8,16 @@ import SubmitButton from "./submit-button";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{
+    sent?: string;
+    error?: string;
+    message?: string;
+  }>;
 }) {
   const resolved = await searchParams;
   const sent = resolved?.sent === "1";
-  const hasError = resolved?.error === "1";
+  const errorMessage = resolved?.message?.trim() || null;
+  const hasError = Boolean(resolved?.error || errorMessage);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0b0f15] text-white">
@@ -59,7 +64,7 @@ export default async function LoginPage({
           )}
           {hasError && (
             <p className="mt-4 text-center text-xs text-rose-200">
-              Could not send magic link. Try again.
+              {errorMessage ?? "Could not send magic link. Try again."}
             </p>
           )}
         </div>

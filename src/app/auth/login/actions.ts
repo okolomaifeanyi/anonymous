@@ -5,6 +5,11 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/server";
 
+function buildLoginRedirect(params: Record<string, string>) {
+  const searchParams = new URLSearchParams(params);
+  return `/auth/login?${searchParams.toString()}`;
+}
+
 async function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
@@ -29,23 +34,65 @@ export async function requestMagicLink(formData: FormData) {
   const email = String(formData.get("email") || "").trim();
 
   if (!email) {
-    redirect("/auth/login?error=1");
+    redirect(
+      buildLoginRedirect({
+        error: "missing-email",
+        message: "Enter the email address approved for admin access.",
+      }),
+    );
   }
 
-  const siteUrl = await getSiteUrl();
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${siteUrl}/auth/callback`,
-    },
-  });
+  let redirectParams:
+    | { error: string; message: string }
+    | { sent: string }
+    | null = null;
 
-  if (error) {
-    redirect("/auth/login?error=1");
+  try {
+    const siteUrl = await getSiteUrl();
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      console.error("Supabase magic link error:", {
+        email,
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        name: error.name,
+      });
+
+      redirectParams = {
+        error: "supabase-auth",
+        message:
+          error.code === "over_email_send_rate_limit"
+            ? "Too many magic links were sent. Wait a minute and try again."
+            : error.message || "Could not send magic link.",
+      };
+    } else {
+      redirectParams = { sent: "1" };
+    }
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Could not send magic link.";
+
+    console.error("Magic link request failed:", {
+      email,
+      message,
+      error,
+    });
+
+    redirectParams = {
+      error: "request-failed",
+      message,
+    };
   }
 
-  redirect("/auth/login?sent=1");
+  redirect(buildLoginRedirect(redirectParams ?? { sent: "1" }));
 }
 
 export async function signOutAction() {
