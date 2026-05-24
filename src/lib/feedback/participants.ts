@@ -1,4 +1,17 @@
 import type { IdentifierType } from "@/lib/feedback/types";
+import { filterRevealedMessages, listParticipantRoomMessageChannels, listParticipantRoomRevealedMessages, type ParticipantRoomMessageChannelRecord, type ParticipantRoomRevealedMessage } from "@/lib/feedback/messages";
+import { getOrganizationByCodeForRoom } from "@/lib/feedback/organizations";
+import {
+  canSeeRevealedMessages,
+  canSeeVoteResults,
+  getParticipantRoomAccessSummary,
+  getVisibleParticipantRoomSections,
+} from "@/lib/feedback/policy";
+import { getRoomSession } from "@/lib/feedback/room-session";
+import {
+  listParticipantRoomVotes,
+  type ParticipantRoomVoteRecord,
+} from "@/lib/feedback/votes";
 
 type CreateLevelInput = {
   organizationId: string;
@@ -55,6 +68,48 @@ type ParticipantLevelAssignmentRow = {
         created_at?: string;
       }[]
     | null;
+};
+
+type ParticipantRoomLevelAssignmentRow = {
+  organization_levels:
+    | {
+        id: string;
+      }
+    | {
+        id: string;
+      }[]
+    | null;
+};
+
+type ParticipantRoomParticipantRow = {
+  id: string;
+  display_name: string | null;
+  status: string;
+};
+
+type ParticipantRoomContextParticipant = {
+  id: string;
+  displayName: string | null;
+  levelIds: string[];
+};
+
+export type ParticipantRoomContext = {
+  organization: Awaited<ReturnType<typeof getOrganizationByCodeForRoom>>;
+  participant: ParticipantRoomContextParticipant;
+};
+
+export type ParticipantRoomData = {
+  organizationCode: string;
+  organizationName: string;
+  participantDisplayName: string | null;
+  votes: Array<
+    ParticipantRoomVoteRecord & {
+      canSeeResults: boolean;
+    }
+  >;
+  messageChannels: ParticipantRoomMessageChannelRecord[];
+  revealedMessages: ParticipantRoomRevealedMessage[];
+  accessSummary: ReturnType<typeof getParticipantRoomAccessSummary>;
 };
 
 export function normalizeIdentifierValue(
@@ -381,4 +436,118 @@ export async function findEligibleParticipantByIdentifier(input: {
   }
 
   return data;
+}
+
+async function getParticipantRoomLevelIds(participantId: string) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("participant_level_assignments")
+    .select("organization_levels(id)")
+    .eq("participant_id", participantId);
+
+  if (error) {
+    throw new Error(`Failed to load participant room levels: ${error.message}`);
+  }
+
+  return ((data ?? []) as ParticipantRoomLevelAssignmentRow[])
+    .map((assignment) =>
+      Array.isArray(assignment.organization_levels)
+        ? assignment.organization_levels[0]
+        : assignment.organization_levels,
+    )
+    .filter((level): level is { id: string } => Boolean(level))
+    .map((level) => level.id);
+}
+
+export async function getParticipantRoomContext(code: string) {
+  const organization = await getOrganizationByCodeForRoom(code);
+  const session = await getRoomSession(organization.id);
+
+  if (!session || session.organizationId !== organization.id) {
+    return null;
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("organization_participants")
+    .select("id,display_name,status")
+    .eq("id", session.participantId)
+    .eq("organization_id", organization.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load participant room access: ${error.message}`);
+  }
+
+  const participant = data as ParticipantRoomParticipantRow | null;
+
+  if (!participant) {
+    return null;
+  }
+
+  return {
+    organization,
+    participant: {
+      id: participant.id,
+      displayName: participant.display_name,
+      levelIds: await getParticipantRoomLevelIds(participant.id),
+    },
+  } satisfies ParticipantRoomContext;
+}
+
+function filterParticipantRoomMessages(
+  participantLevelIds: string[],
+  messages: ParticipantRoomRevealedMessage[],
+) {
+  return filterRevealedMessages(messages).filter((message) =>
+    canSeeRevealedMessages(participantLevelIds, message),
+  );
+}
+
+export async function getParticipantRoomData(code: string) {
+  const context = await getParticipantRoomContext(code);
+
+  if (!context) {
+    return null;
+  }
+
+  const [votes, messageChannels, revealedMessages] = await Promise.all([
+    listParticipantRoomVotes(
+      context.organization.id,
+      context.participant.id,
+    ),
+    listParticipantRoomMessageChannels(context.organization.id),
+    listParticipantRoomRevealedMessages(context.organization.id),
+  ]);
+
+  const visibleSections = getVisibleParticipantRoomSections({
+    participantLevelIds: context.participant.levelIds,
+    votes,
+    messageChannels,
+  });
+  const visibleMessages = filterParticipantRoomMessages(
+    context.participant.levelIds,
+    revealedMessages,
+  );
+
+  return {
+    organizationCode: context.organization.code,
+    organizationName: context.organization.name,
+    participantDisplayName: context.participant.displayName,
+    votes: visibleSections.votes.map((vote) => ({
+      ...vote,
+      canSeeResults: canSeeVoteResults(context.participant.levelIds, vote),
+    })),
+    messageChannels: visibleSections.messageChannels,
+    revealedMessages: visibleMessages,
+    accessSummary: getParticipantRoomAccessSummary({
+      participantLevelIds: context.participant.levelIds,
+      votes: visibleSections.votes,
+      messageChannels: visibleSections.messageChannels,
+      revealedMessages: visibleMessages,
+    }),
+  } satisfies ParticipantRoomData;
 }

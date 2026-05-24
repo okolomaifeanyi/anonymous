@@ -1,4 +1,8 @@
-import type { MessageChannelStatus } from "@/lib/feedback/types";
+import { canAccessAudience } from "@/lib/feedback/policy";
+import type {
+  MessageChannelStatus,
+  ParticipantRoomMessageChannel,
+} from "@/lib/feedback/types";
 
 type MessageEntry = {
   revealed: boolean;
@@ -80,6 +84,65 @@ type ToggleMessageRevealInput = {
   messageId: string;
   organizationId: string;
   revealed: boolean;
+};
+
+type ParticipantRoomMessageChannelRow = {
+  id: string;
+  title: string;
+  prompt: string;
+  status: MessageChannelStatus;
+  submit_level_ids: string[];
+  reveal_level_ids: string[];
+};
+
+type ParticipantRoomRevealedMessageRow = {
+  id: string;
+  body: string;
+  revealed: boolean;
+  created_at: string;
+  channel_id: string;
+  message_channels:
+    | {
+        title: string;
+        organization_id: string;
+        reveal_level_ids: string[];
+      }
+    | {
+        title: string;
+        organization_id: string;
+        reveal_level_ids: string[];
+      }[]
+    | null;
+};
+
+type ParticipantMessageChannelAccessRow = {
+  id: string;
+  organization_id: string;
+  status: MessageChannelStatus;
+  submit_level_ids: string[];
+};
+
+type CreateParticipantMessageEntryInput = {
+  organizationId: string;
+  participantId: string;
+  participantLevelIds: string[];
+  channelId: string;
+  body: string;
+};
+
+export type ParticipantRoomMessageChannelRecord =
+  ParticipantRoomMessageChannel & {
+    prompt: string;
+  };
+
+export type ParticipantRoomRevealedMessage = {
+  id: string;
+  body: string;
+  revealed: boolean;
+  createdAt: string;
+  channelId: string;
+  channelTitle: string;
+  revealLevelIds: string[];
 };
 
 type MessageEntryRow = {
@@ -278,6 +341,135 @@ export async function listMessageEntries(organizationId: string) {
       channel_title: channel?.title ?? "Untitled channel",
     };
   });
+}
+
+export async function listParticipantRoomMessageChannels(
+  organizationId: string,
+) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("message_channels")
+    .select("id,title,prompt,status,submit_level_ids,reveal_level_ids")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(
+      `Failed to load participant room message channels: ${error.message}`,
+    );
+  }
+
+  return ((data ?? []) as ParticipantRoomMessageChannelRow[]).map((channel) => ({
+    id: channel.id,
+    title: channel.title,
+    prompt: channel.prompt,
+    status: channel.status,
+    submitLevelIds: channel.submit_level_ids ?? [],
+    revealLevelIds: channel.reveal_level_ids ?? [],
+  }));
+}
+
+export async function listParticipantRoomRevealedMessages(
+  organizationId: string,
+) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("message_entries")
+    .select(
+      "id,body,revealed,created_at,channel_id,message_channels!inner(title,organization_id,reveal_level_ids)",
+    )
+    .eq("organization_id", organizationId)
+    .eq("revealed", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(
+      `Failed to load participant room revealed messages: ${error.message}`,
+    );
+  }
+
+  return ((data ?? []) as ParticipantRoomRevealedMessageRow[]).map((message) => {
+    const channel = Array.isArray(message.message_channels)
+      ? message.message_channels[0]
+      : message.message_channels;
+
+    return {
+      id: message.id,
+      body: message.body,
+      revealed: message.revealed,
+      createdAt: message.created_at,
+      channelId: message.channel_id,
+      channelTitle: channel?.title ?? "Untitled channel",
+      revealLevelIds: channel?.reveal_level_ids ?? [],
+    } satisfies ParticipantRoomRevealedMessage;
+  });
+}
+
+export async function createParticipantMessageEntry({
+  organizationId,
+  participantId,
+  participantLevelIds,
+  channelId,
+  body,
+}: CreateParticipantMessageEntryInput) {
+  const trimmedChannelId = channelId.trim();
+  const trimmedBody = body.trim();
+
+  if (!trimmedChannelId) {
+    throw new Error("Message channel id is required.");
+  }
+
+  if (!trimmedBody) {
+    throw new Error("Write a message before you submit.");
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("message_channels")
+    .select("id,organization_id,status,submit_level_ids")
+    .eq("id", trimmedChannelId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load message channel: ${error.message}`);
+  }
+
+  const channel = data as ParticipantMessageChannelAccessRow | null;
+
+  if (!channel || channel.organization_id !== organizationId) {
+    throw new Error("Message channel not found for this room.");
+  }
+
+  if (channel.status !== "open") {
+    throw new Error("This message channel is closed right now.");
+  }
+
+  if (!canAccessAudience(participantLevelIds, channel.submit_level_ids ?? [])) {
+    throw new Error("You do not have access to submit to this channel.");
+  }
+
+  const { data: entry, error: insertError } = await supabase
+    .from("message_entries")
+    .insert({
+      channel_id: trimmedChannelId,
+      participant_id: participantId,
+      organization_id: organizationId,
+      body: trimmedBody,
+      revealed: false,
+    })
+    .select("id")
+    .single();
+
+  if (insertError) {
+    throw new Error(
+      `Failed to create participant message entry: ${insertError.message}`,
+    );
+  }
+
+  return entry;
 }
 
 export default filterRevealedMessages;

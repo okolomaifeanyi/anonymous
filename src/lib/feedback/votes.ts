@@ -1,4 +1,5 @@
-import type { VoteStatus } from "@/lib/feedback/types";
+import { canAccessAudience } from "@/lib/feedback/policy";
+import type { ParticipantRoomVote, VoteStatus } from "@/lib/feedback/types";
 
 export type VoteChoice = "support" | "oppose";
 
@@ -76,6 +77,50 @@ type ParseVoteInput = {
 type CreateVoteInput = ParseVoteInput & {
   organizationId: string;
   status: VoteStatus;
+};
+
+type ParticipantVoteBallotRow = {
+  participant_id: string;
+  choice: VoteChoice;
+};
+
+type ParticipantRoomVoteRow = {
+  id: string;
+  title: string;
+  description: string;
+  tag: string;
+  status: VoteStatus;
+  eligible_level_ids: string[];
+  live_result_level_ids: string[];
+  final_result_level_ids: string[];
+  vote_ballots:
+    | ParticipantVoteBallotRow
+    | ParticipantVoteBallotRow[]
+    | null;
+};
+
+type ParticipantVoteAccessRow = {
+  id: string;
+  organization_id: string;
+  status: VoteStatus;
+  eligible_level_ids: string[];
+};
+
+export type ParticipantRoomVoteRecord = ParticipantRoomVote & {
+  description: string;
+  tag: string;
+  supportCount: number;
+  opposeCount: number;
+  totalCount: number;
+  participantChoice: VoteChoice | null;
+};
+
+type CastParticipantVoteInput = {
+  organizationId: string;
+  participantId: string;
+  participantLevelIds: string[];
+  voteId: string;
+  choice: VoteChoice;
 };
 
 function normalizeLevelIds(levelIds: string[]) {
@@ -237,6 +282,108 @@ export async function listVotes(organizationId: string) {
   }
 
   return (data ?? []) as OrganizationVote[];
+}
+
+function normalizeParticipantVoteBallots(
+  ballots: ParticipantVoteBallotRow[] | ParticipantVoteBallotRow | null,
+) {
+  if (!ballots) {
+    return [];
+  }
+
+  return Array.isArray(ballots) ? ballots : [ballots];
+}
+
+export async function listParticipantRoomVotes(
+  organizationId: string,
+  participantId: string,
+) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("votes")
+    .select(
+      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,vote_ballots(participant_id,choice)",
+    )
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load participant room votes: ${error.message}`);
+  }
+
+  return ((data ?? []) as ParticipantRoomVoteRow[]).map((vote) => {
+    const ballots = normalizeParticipantVoteBallots(vote.vote_ballots);
+    const supportCount = ballots.filter(
+      (ballot) => ballot.choice === "support",
+    ).length;
+    const opposeCount = ballots.filter(
+      (ballot) => ballot.choice === "oppose",
+    ).length;
+
+    return {
+      id: vote.id,
+      title: vote.title,
+      description: vote.description,
+      tag: vote.tag,
+      status: vote.status,
+      eligibleLevelIds: vote.eligible_level_ids ?? [],
+      liveResultLevelIds: vote.live_result_level_ids ?? [],
+      finalResultLevelIds: vote.final_result_level_ids ?? [],
+      supportCount,
+      opposeCount,
+      totalCount: supportCount + opposeCount,
+      participantChoice:
+        ballots.find((ballot) => ballot.participant_id === participantId)
+          ?.choice ?? null,
+    } satisfies ParticipantRoomVoteRecord;
+  });
+}
+
+export async function castParticipantVote({
+  organizationId,
+  participantId,
+  participantLevelIds,
+  voteId,
+  choice,
+}: CastParticipantVoteInput) {
+  const trimmedVoteId = voteId.trim();
+
+  if (!trimmedVoteId) {
+    throw new Error("Vote id is required.");
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("votes")
+    .select("id,organization_id,status,eligible_level_ids")
+    .eq("id", trimmedVoteId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load vote: ${error.message}`);
+  }
+
+  const vote = data as ParticipantVoteAccessRow | null;
+
+  if (!vote || vote.organization_id !== organizationId) {
+    throw new Error("Vote not found for this room.");
+  }
+
+  if (vote.status !== "active") {
+    throw new Error("This vote is not open right now.");
+  }
+
+  if (!canAccessAudience(participantLevelIds, vote.eligible_level_ids ?? [])) {
+    throw new Error("You do not have access to vote on this item.");
+  }
+
+  return upsertVoteBallot({
+    voteId: trimmedVoteId,
+    participantId,
+    choice,
+  });
 }
 
 export default countVoteChoices;

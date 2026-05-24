@@ -4,6 +4,10 @@ import type {
   VoteVisibilityRule,
 } from "@/lib/feedback/types";
 
+type RevealedMessageVisibilityRule = {
+  revealLevelIds: string[];
+};
+
 export function canAccessAudience(
   participantLevelIds: string[],
   audienceLevelIds: string[],
@@ -25,25 +29,60 @@ export function canSeeVoteResults(
   return canAccessAudience(participantLevelIds, audienceLevelIds);
 }
 
-type ParticipantRoomSectionsInput = {
+export function canSeeRevealedMessages(
+  participantLevelIds: string[],
+  message: RevealedMessageVisibilityRule,
+) {
+  return canAccessAudience(participantLevelIds, message.revealLevelIds);
+}
+
+type ParticipantRoomSectionsInput<
+  TVote extends ParticipantRoomVote,
+  TMessageChannel extends ParticipantRoomMessageChannel,
+> = {
   participantLevelIds: string[];
-  votes: ParticipantRoomVote[];
-  messageChannels: ParticipantRoomMessageChannel[];
+  votes: TVote[];
+  messageChannels: TMessageChannel[];
 };
 
-type ParticipantRoomSections = {
-  votes: ParticipantRoomVote[];
-  messageChannels: ParticipantRoomMessageChannel[];
+type ParticipantRoomSections<
+  TVote extends ParticipantRoomVote,
+  TMessageChannel extends ParticipantRoomMessageChannel,
+> = {
+  votes: TVote[];
+  messageChannels: TMessageChannel[];
   resultsVisible: boolean;
 };
 
-export function getVisibleParticipantRoomSections(
-  input: ParticipantRoomSectionsInput,
-): ParticipantRoomSections {
+type ParticipantRoomAccessSummaryInput<
+  TVote extends ParticipantRoomVote,
+  TMessageChannel extends ParticipantRoomMessageChannel,
+> = {
+  participantLevelIds: string[];
+  votes: TVote[];
+  messageChannels: TMessageChannel[];
+  revealedMessages: RevealedMessageVisibilityRule[];
+};
+
+export type ParticipantRoomAccessSummary = {
+  voteCount: number;
+  messageChannelCount: number;
+  resultCount: number;
+  revealedMessageCount: number;
+};
+
+export function getVisibleParticipantRoomSections<
+  TVote extends ParticipantRoomVote,
+  TMessageChannel extends ParticipantRoomMessageChannel,
+>(
+  input: ParticipantRoomSectionsInput<TVote, TMessageChannel>,
+): ParticipantRoomSections<TVote, TMessageChannel> {
   const votes = input.votes.filter((vote) =>
+    vote.status !== "draft" &&
     canAccessAudience(input.participantLevelIds, vote.eligibleLevelIds),
   );
   const messageChannels = input.messageChannels.filter((channel) =>
+    channel.status !== "draft" &&
     canAccessAudience(input.participantLevelIds, channel.submitLevelIds),
   );
 
@@ -53,5 +92,23 @@ export function getVisibleParticipantRoomSections(
     resultsVisible: votes.some((vote) =>
       canSeeVoteResults(input.participantLevelIds, vote),
     ),
+  };
+}
+
+export function getParticipantRoomAccessSummary(
+  input: ParticipantRoomAccessSummaryInput<
+    ParticipantRoomVote,
+    ParticipantRoomMessageChannel
+  >,
+): ParticipantRoomAccessSummary {
+  return {
+    voteCount: input.votes.length,
+    messageChannelCount: input.messageChannels.length,
+    resultCount: input.votes.filter((vote) =>
+      canSeeVoteResults(input.participantLevelIds, vote),
+    ).length,
+    revealedMessageCount: input.revealedMessages.filter((message) =>
+      canSeeRevealedMessages(input.participantLevelIds, message),
+    ).length,
   };
 }
