@@ -1,6 +1,7 @@
 import { EnvelopeIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 
 import Breadcrumbs from "@/components/breadcrumbs";
+import RateLimitBanner from "@/components/rate-limit-banner";
 
 import { requestMagicLink } from "./actions";
 import SubmitButton from "./submit-button";
@@ -22,10 +23,8 @@ export default async function LoginPage({
   const parsedCooldown = Number.parseInt(resolved?.cooldown ?? "", 10);
   const initialCooldown =
     Number.isFinite(parsedCooldown) && parsedCooldown > 0 ? parsedCooldown : 0;
-  const rateLimitMessage =
-    initialCooldown > 0
-      ? `Too many magic links were sent. Wait ${initialCooldown} seconds and try again.`
-      : "Too many magic links were sent. Wait a minute and try again.";
+  const isRateLimited =
+    resolved?.error === "supabase-auth" && initialCooldown > 0;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-transparent text-white">
@@ -72,15 +71,19 @@ export default async function LoginPage({
               Magic link sent. Check your inbox for admin access.
             </p>
           )}
-          {hasError && (
-            <p className="mt-4 text-center text-xs text-rose-200">
-              {resolved?.error === "supabase-auth" &&
-              resolved?.cooldown &&
-              !resolved?.message
-                ? rateLimitMessage
-                : errorMessage ?? "Could not send magic link. Try again."}
-            </p>
-          )}
+          {hasError &&
+            (isRateLimited ? (
+              <RateLimitBanner
+                className="mt-4 text-center text-xs text-rose-200"
+                prefix="Too many magic links were sent. Wait "
+                suffix=" seconds and try again."
+                initialSeconds={initialCooldown}
+              />
+            ) : (
+              <p className="mt-4 text-center text-xs text-rose-200">
+                {errorMessage ?? "Could not send magic link. Try again."}
+              </p>
+            ))}
         </div>
       </div>
     </div>

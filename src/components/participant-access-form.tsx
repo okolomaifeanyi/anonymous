@@ -1,6 +1,7 @@
 import { verifyParticipant } from "@/app/room/[code]/actions";
 import type { IdentifierType } from "@/lib/feedback/types";
 import SubmitButton from "@/components/ui/submit-button";
+import type { ReactNode } from "react";
 
 type ParticipantAccessFormProps = {
   code: string;
@@ -10,6 +11,8 @@ type ParticipantAccessFormProps = {
   identifierValue: string;
   verificationStep: boolean;
   error: string | null;
+  rateLimitBanner?: ReactNode;
+  rateLimitBannerId?: string;
   status: string | null;
 };
 
@@ -61,6 +64,8 @@ export default function ParticipantAccessForm({
   identifierValue,
   verificationStep,
   error,
+  rateLimitBanner,
+  rateLimitBannerId,
   status,
 }: ParticipantAccessFormProps) {
   const action = verifyParticipant.bind(null, code);
@@ -68,6 +73,7 @@ export default function ParticipantAccessForm({
   const describedBy = [
     status ? "participant-access-status" : null,
     error ? "participant-access-error" : null,
+    rateLimitBanner ? rateLimitBannerId ?? "participant-access-error" : null,
   ]
     .filter(Boolean)
     .join(" ");
@@ -111,6 +117,8 @@ export default function ParticipantAccessForm({
         >
           {error}
         </p>
+      ) : rateLimitBanner ? (
+        rateLimitBanner
       ) : null}
 
       {isEmailFlow ? (

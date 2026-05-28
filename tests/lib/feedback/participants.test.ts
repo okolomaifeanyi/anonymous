@@ -1,12 +1,25 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  createAdminClient: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createAdminClient: mocks.createAdminClient,
+}));
 
 import {
+  deleteParticipant,
   normalizeIdentifierValue,
   parseParticipantInput,
   slugifyLevelName,
 } from "@/lib/feedback/participants";
 
 describe("feedback participants helpers", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('normalizeIdentifierValue normalizes email values', () => {
     expect(normalizeIdentifierValue("email", "  USER@Example.COM  ")).toBe(
       "user@example.com",
@@ -65,5 +78,35 @@ describe("feedback participants helpers", () => {
       identifierValue: "+2348011112222",
       displayName: null,
     });
+  });
+
+  it("deleteParticipant removes a participant from the organization", async () => {
+    const deleteQuery = {
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "participant-1" },
+        error: null,
+      }),
+    };
+    const from = vi.fn(() => ({
+      delete: vi.fn(() => deleteQuery),
+    }));
+
+    mocks.createAdminClient.mockReturnValue({
+      from,
+    });
+
+    await expect(
+      deleteParticipant({
+        organizationId: "org-1",
+        participantId: "participant-1",
+      }),
+    ).resolves.toEqual({ id: "participant-1" });
+
+    expect(from).toHaveBeenCalledWith("organization_participants");
+    expect(deleteQuery.eq).toHaveBeenNthCalledWith(1, "organization_id", "org-1");
+    expect(deleteQuery.eq).toHaveBeenNthCalledWith(2, "id", "participant-1");
+    expect(deleteQuery.select).toHaveBeenCalledWith("id");
   });
 });

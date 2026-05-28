@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import Breadcrumbs from "@/components/breadcrumbs";
 import ParticipantAccessForm from "@/components/participant-access-form";
+import RateLimitBanner from "@/components/rate-limit-banner";
 import { getOrganizationByCodeForRoom } from "@/lib/feedback/organizations";
 import { getParticipantRoomContext } from "@/lib/feedback/participants";
 
@@ -93,6 +94,13 @@ export default async function ParticipantAccessPage({
   const verificationStep = readSearchParam(resolvedSearchParams, "step");
   const errorMessage = readSearchParam(resolvedSearchParams, "message");
   const cooldown = readSearchParam(resolvedSearchParams, "cooldown");
+  const parsedCooldown = Number.parseInt(cooldown ?? "", 10);
+  const rateLimitCooldown =
+    readSearchParam(resolvedSearchParams, "error") === "rate-limited" &&
+    Number.isFinite(parsedCooldown) &&
+    parsedCooldown > 0
+      ? parsedCooldown
+      : 0;
   const emailVerificationEnabled =
     organization.participant_identifier_type === "email";
 
@@ -166,11 +174,26 @@ export default async function ParticipantAccessPage({
             identifierType={organization.participant_identifier_type}
             identifierValue={identifierValue ?? ""}
             verificationStep={verificationStep === "code"}
-            error={getAccessErrorMessage(
-              readSearchParam(resolvedSearchParams, "error"),
-              errorMessage,
-              cooldown,
-            )}
+            error={
+              rateLimitCooldown > 0
+                ? null
+                : getAccessErrorMessage(
+                    readSearchParam(resolvedSearchParams, "error"),
+                    errorMessage,
+                    cooldown,
+                  )
+            }
+            rateLimitBanner={
+              rateLimitCooldown > 0 ? (
+                <RateLimitBanner
+                  id="participant-access-error"
+                  className="mt-6 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
+                  prefix="Too many codes were sent. Wait "
+                  suffix=" seconds and try again."
+                  initialSeconds={rateLimitCooldown}
+                />
+              ) : null
+            }
             status={getAccessStatusMessage(
               readSearchParam(resolvedSearchParams, "status"),
             )}

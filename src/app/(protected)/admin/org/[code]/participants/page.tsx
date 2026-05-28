@@ -7,7 +7,7 @@ import {
 } from "@/lib/feedback/participants";
 import SubmitButton from "@/components/ui/submit-button";
 
-import { addParticipant } from "./actions";
+import { addParticipant, removeParticipant } from "./actions";
 
 type ParticipantsPageProps = {
   params: Promise<{ code: string }>;
@@ -126,6 +126,13 @@ export default async function AdminOrganizationParticipantsPage({
               role="status"
             >
               Participant added successfully.
+            </p>
+          ) : status === "participant-deleted" ? (
+            <p
+              className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+              role="status"
+            >
+              Participant deleted.
             </p>
           ) : null}
 
@@ -293,6 +300,22 @@ export default async function AdminOrganizationParticipantsPage({
                       </span>
                     )}
                   </div>
+
+                  <form
+                    action={removeParticipant.bind(null, code)}
+                    className="mt-4 flex justify-end"
+                  >
+                    <input
+                      type="hidden"
+                      name="participantId"
+                      value={participant.id}
+                    />
+                    <SubmitButton
+                      label="Delete"
+                      pendingLabel="Deleting..."
+                      className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+                    />
+                  </form>
                 </article>
               );
             })}

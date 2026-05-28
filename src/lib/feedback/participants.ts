@@ -27,6 +27,11 @@ type CreateParticipantInput = {
   levelIds: string[];
 };
 
+type DeleteParticipantInput = {
+  organizationId: string;
+  participantId: string;
+};
+
 type AdminError = {
   code?: string;
   message: string;
@@ -343,6 +348,31 @@ export async function createParticipant({
     throw new Error(
       `Failed to assign participant levels: ${assignmentError.message}`,
     );
+  }
+
+  return data;
+}
+
+export async function deleteParticipant({
+  organizationId,
+  participantId,
+}: DeleteParticipantInput) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("organization_participants")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("id", participantId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to delete participant: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Participant not found.");
   }
 
   return data;
