@@ -18,14 +18,14 @@ export default async function AdminPage() {
               Your organizations
             </h2>
             <p className="max-w-2xl text-sm text-white/60">
-              Open a workspace or create a new one.
+              Open a workspace or create one.
             </p>
           </div>
           <Link
             href="/admin/org/new"
             className="button-surface inline-flex w-fit items-center px-5 py-3 text-sm font-semibold text-[#0b0f15] transition"
           >
-            Create organization
+            Create workspace
           </Link>
         </div>
 
@@ -59,10 +59,10 @@ export default async function AdminPage() {
           ) : (
             <article className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 md:col-span-2 xl:col-span-3">
               <h3 className="text-lg font-semibold text-white">
-                No organizations yet
+                No workspaces yet
               </h3>
               <p className="mt-2 max-w-2xl text-sm text-white/60">
-                Create your first workspace.
+                Create one to begin.
               </p>
             </article>
           )}

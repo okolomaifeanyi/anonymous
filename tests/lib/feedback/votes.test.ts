@@ -9,6 +9,7 @@ import filterRevealedMessages, {
   revealMessageEntry,
 } from "@/lib/feedback/messages";
 import countVoteChoices, {
+  __setVoteImageColumnSupportForTests,
   createVote,
   deleteVote,
   parseVoteInput,
@@ -116,6 +117,7 @@ function createUpdateQuery(result: {
 describe("feedback vote and message helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    __setVoteImageColumnSupportForTests(true);
   });
 
   it("countVoteChoices summarizes support, oppose, and total ballots", () => {
@@ -274,6 +276,108 @@ describe("feedback vote and message helpers", () => {
     ]);
 
     expect(voteSelects[0]).not.toContain("vote_ballots(");
+    expect(ballotSelects[0]).toBe("vote_id,participant_id,choice");
+  });
+
+  it("listParticipantRoomVotes falls back when image_url is missing", async () => {
+    const voteSelects: string[] = [];
+    const ballotSelects: string[] = [];
+    const fallbackVotesQuery = {
+      eq: vi.fn(),
+      order: vi.fn(),
+    };
+    fallbackVotesQuery.eq.mockReturnValue(fallbackVotesQuery);
+    fallbackVotesQuery.order.mockResolvedValue({
+      data: [
+        {
+          id: "vote-1",
+          title: "Approve the budget",
+          description: "Budget proposal",
+          tag: "General",
+          status: "active",
+          eligible_level_ids: ["level-1"],
+          live_result_level_ids: ["level-1"],
+          final_result_level_ids: ["level-1"],
+          created_at: "2026-05-28T00:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
+
+    const firstVotesQuery = {
+      eq: vi.fn(),
+      order: vi.fn(),
+    };
+    firstVotesQuery.eq.mockReturnValue(firstVotesQuery);
+    firstVotesQuery.order.mockResolvedValue({
+      data: null,
+      error: {
+        message: 'column "image_url" does not exist',
+      },
+    });
+
+    const ballotsQuery = {
+      eq: vi.fn(),
+      in: vi.fn(),
+    };
+    ballotsQuery.eq.mockReturnValue(ballotsQuery);
+    ballotsQuery.in.mockResolvedValue({
+      data: [
+        {
+          vote_id: "vote-1",
+          participant_id: "participant-1",
+          choice: "support",
+        },
+      ],
+      error: null,
+    });
+
+    const from = vi.fn((table: string) => {
+      if (table === "votes") {
+        return {
+          select: vi.fn((columns: string) => {
+            voteSelects.push(columns);
+            return voteSelects.length === 1 ? firstVotesQuery : fallbackVotesQuery;
+          }),
+        };
+      }
+
+      if (table === "vote_ballots") {
+        return {
+          select: vi.fn((columns: string) => {
+            ballotSelects.push(columns);
+            return ballotsQuery;
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    });
+
+    vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+
+    await expect(
+      listParticipantRoomVotes("org-1", "participant-1"),
+    ).resolves.toEqual([
+      {
+        id: "vote-1",
+        title: "Approve the budget",
+        description: "Budget proposal",
+        tag: "General",
+        imageUrl: null,
+        status: "active",
+        eligibleLevelIds: ["level-1"],
+        liveResultLevelIds: ["level-1"],
+        finalResultLevelIds: ["level-1"],
+        supportCount: 1,
+        opposeCount: 0,
+        totalCount: 1,
+        participantChoice: "support",
+      },
+    ]);
+
+    expect(voteSelects[0]).toContain("image_url");
+    expect(voteSelects[1]).not.toContain("image_url");
     expect(ballotSelects[0]).toBe("vote_id,participant_id,choice");
   });
 

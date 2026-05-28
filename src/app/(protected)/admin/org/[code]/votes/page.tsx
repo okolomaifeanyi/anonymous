@@ -72,7 +72,7 @@ export default async function AdminOrganizationVotesPage({
           </p>
           <h2 className="mt-3 font-heading text-2xl text-white">Votes</h2>
           <p className="mt-3 text-sm text-white/65">
-            Create ballots, choose who votes, and set result visibility.
+            Create ballots, choose voters, and set visibility.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -102,7 +102,7 @@ export default async function AdminOrganizationVotesPage({
             <div>
               <h3 className="font-heading text-xl text-white">Create vote</h3>
               <p className="mt-2 text-sm text-white/60">
-                Choose the audience and result visibility.
+                Set the audience and visibility.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -155,7 +155,7 @@ export default async function AdminOrganizationVotesPage({
           <div>
             <h3 className="font-heading text-xl text-white">Current votes</h3>
             <p className="mt-2 text-sm text-white/60">
-              Check audience and visibility for each vote.
+              Audience and visibility for each vote.
             </p>
           </div>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">

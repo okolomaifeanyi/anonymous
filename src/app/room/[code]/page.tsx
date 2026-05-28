@@ -24,15 +24,15 @@ function getAccessErrorMessage(
   message: string | undefined,
 ) {
   if (error === "identifier-required") {
-    return "Enter the approved identifier for this room.";
+    return "Enter the approved identifier.";
   }
 
   if (error === "access-denied") {
-    return "That email is not approved for this room.";
+    return "That email is not approved.";
   }
 
   if (error === "code-required") {
-    return "Enter the verification code from your email.";
+    return "Enter the code from your email.";
   }
 
   if (error === "code-invalid") {
@@ -52,11 +52,11 @@ function getAccessErrorMessage(
 
 function getAccessStatusMessage(status: string | undefined) {
   if (status === "signed-out") {
-    return "You left the participant room. Verify again to re-enter.";
+    return "You left the room. Verify again to re-enter.";
   }
 
   if (status === "code-sent") {
-    return "We sent a verification code to your email address.";
+    return "We sent a code to your email.";
   }
 
   return null;
@@ -102,15 +102,15 @@ export default async function ParticipantAccessPage({
         <section className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_0_40px_rgba(15,23,42,0.28)]">
             <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
-              Participant verification
+              Verify access
             </p>
             <h1 className="mt-4 font-heading text-3xl md:text-4xl">
               {organization.name}
             </h1>
             <p className="mt-3 max-w-xl text-sm text-white/65 md:text-base">
               {emailVerificationEnabled
-                ? "This room is limited to approved participants. We will send a one-time code to your approved email address before you enter."
-                : "This room is limited to approved participants. Verify with the identifier chosen by the organizer to enter the shared anonymous workspace."}
+                ? "Approved participants only. We send a code to your email before entry."
+                : "Approved participants only. Enter the identifier set by the organizer."}
             </p>
 
             <dl className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -124,7 +124,7 @@ export default async function ParticipantAccessPage({
               </div>
               <div className="rounded-3xl border border-white/10 bg-[#0f141d] p-5">
                 <dt className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-                  Verification method
+                  Method
                 </dt>
                 <dd className="mt-2 text-sm text-white/85">
                   {organization.participant_identifier_label}
@@ -133,19 +133,17 @@ export default async function ParticipantAccessPage({
             </dl>
 
             <div className="mt-8 rounded-3xl border border-white/10 bg-[#0f141d] p-5">
-              <h2 className="font-heading text-xl text-white">
-                What happens after entry
-              </h2>
+              <h2 className="font-heading text-xl text-white">After entry</h2>
               <ul className="mt-4 grid gap-3 text-sm text-white/65">
-                <li>View only the votes and message channels assigned to your audience.</li>
-                <li>Stay anonymous to other participants while the system keeps your access verified.</li>
-                <li>See results or revealed messages only when the organizer has allowed them for your audience.</li>
+                <li>See the votes and messages assigned to you.</li>
+                <li>Stay anonymous to other participants.</li>
+                <li>See results and reveals only if allowed.</li>
               </ul>
             </div>
 
             {emailVerificationEnabled ? (
               <p className="mt-6 text-sm text-white/55">
-                Keep the email inbox that matches your participant record open.
+                Keep your email inbox open.
               </p>
             ) : null}
           </article>

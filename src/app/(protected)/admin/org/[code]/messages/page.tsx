@@ -195,7 +195,7 @@ export default async function AdminOrganizationMessagesPage({
                 Current channels
               </h3>
               <p className="mt-2 text-sm text-white/60">
-                See who can submit and who can see the reveal.
+                Who can submit and who can see the reveal.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -322,7 +322,7 @@ export default async function AdminOrganizationMessagesPage({
             <div>
               <h3 className="font-heading text-xl text-white">Recent entries</h3>
               <p className="mt-2 text-sm text-white/60">
-                Reveal messages when needed.
+                Reveal when needed.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">

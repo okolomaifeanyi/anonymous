@@ -46,22 +46,22 @@ export default function ParticipantRoom({
     {
       label: "Active votes",
       value: room.accessSummary.voteCount,
-      description: "Vote cards available to your audience.",
+      description: "Open vote cards.",
     },
     {
       label: "Message channels",
       value: room.accessSummary.messageChannelCount,
-      description: "Anonymous submission spaces assigned to you.",
+      description: "Open message channels.",
     },
     {
       label: "Visible results",
       value: room.accessSummary.resultCount,
-      description: "Vote results currently visible to your audience.",
+      description: "Results you can see.",
     },
     {
       label: "Revealed messages",
       value: room.accessSummary.revealedMessageCount,
-      description: "Messages the organizer made visible to your audience.",
+      description: "Messages you can see.",
     },
   ].filter((item) => item.value > 0);
 
@@ -77,19 +77,18 @@ export default function ParticipantRoom({
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
-              Participant room
+              Room
             </p>
             <h1 className="font-heading text-3xl md:text-4xl">
               {room.organizationName}
             </h1>
             <p className="max-w-2xl text-sm text-white/65 md:text-base">
-              Everything here is scoped to the audiences the organizer approved
-              for you. Your activity is verified by the system but remains
-              anonymous to other participants.
+              You only see what your audience allows. Other participants do not
+              see your identity.
             </p>
             {room.participantDisplayName ? (
               <p className="text-sm text-white/55">
-                Access record: {room.participantDisplayName}
+                Verified as {room.participantDisplayName}
               </p>
             ) : null}
           </div>
@@ -99,7 +98,7 @@ export default function ParticipantRoom({
               type="submit"
               className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              Leave room
+              Leave
             </button>
           </form>
         </header>
@@ -151,15 +150,11 @@ export default function ParticipantRoom({
               <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
-                  Active votes
+                  Votes
                 </p>
-                <h2 className="font-heading text-2xl text-white">
-                  Cast your response
-                </h2>
+                <h2 className="font-heading text-2xl text-white">Votes</h2>
                 <p className="text-sm text-white/60">
-                  You can change your vote while an item remains active. Closed
-                  votes stay visible here for continuity, but no new responses
-                  can be submitted.
+                  Vote while active. Closed votes stay visible.
                 </p>
               </div>
 
@@ -247,8 +242,7 @@ export default function ParticipantRoom({
                       </div>
                     ) : (
                       <p className="mt-5 text-sm text-white/50">
-                        Results are hidden until the organizer opens them to
-                        your audience.
+                        Results are hidden until opened.
                       </p>
                     )}
                   </article>
@@ -262,15 +256,11 @@ export default function ParticipantRoom({
               <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
-                  Anonymous messages
+                  Messages
                 </p>
-                <h2 className="font-heading text-2xl text-white">
-                  Share feedback without attribution
-                </h2>
+                <h2 className="font-heading text-2xl text-white">Messages</h2>
                 <p className="text-sm text-white/60">
-                  Each message goes to the organizer for review first. Only
-                  revealed messages reappear in this room, and only for audiences
-                  the organizer explicitly chose.
+                  Send feedback anonymously. Only revealed messages return here.
                 </p>
               </div>
 
@@ -290,7 +280,7 @@ export default function ParticipantRoom({
                             (message) => message.channelId === channel.id,
                           ).length
                         }{" "}
-                        visible message
+                        visible
                         {room.revealedMessages.filter(
                           (message) => message.channelId === channel.id,
                         ).length === 1
@@ -311,7 +301,7 @@ export default function ParticipantRoom({
                         htmlFor={`message-${channel.id}`}
                         className="text-sm font-medium text-white/80"
                       >
-                        Your anonymous message
+                        Message
                       </label>
                       <textarea
                         id={`message-${channel.id}`}
@@ -325,7 +315,7 @@ export default function ParticipantRoom({
                         disabled={channel.status !== "open"}
                         className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-white/30 disabled:text-white/60"
                       >
-                        Submit anonymously
+                        Send
                       </button>
                     </form>
                   </article>
@@ -339,14 +329,11 @@ export default function ParticipantRoom({
               <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
-                  Messages for you
+                  Private messages
                 </p>
-                <h2 className="font-heading text-2xl text-white">
-                  Decide when to reveal
-                </h2>
+                <h2 className="font-heading text-2xl text-white">Reveal</h2>
                 <p className="text-sm text-white/60">
-                  These messages are routed directly to you. You can reveal any
-                  one of them to the wider audience when you are ready.
+                  These messages are for you. Reveal them when ready.
                 </p>
               </div>
 
@@ -374,7 +361,7 @@ export default function ParticipantRoom({
                         type="submit"
                         className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
                       >
-                        Reveal to everyone
+                        Reveal
                       </button>
                     </form>
                   </article>
@@ -390,11 +377,9 @@ export default function ParticipantRoom({
               <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
-                  Visible results
+                  Results
                 </p>
-                <h2 className="font-heading text-2xl text-white">
-                  Results your audience can see
-                </h2>
+                <h2 className="font-heading text-2xl text-white">Results</h2>
               </div>
 
               <div className="mt-6 space-y-4">
@@ -432,11 +417,9 @@ export default function ParticipantRoom({
               <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
-                  Revealed messages
+                  Revealed
                 </p>
-                <h2 className="font-heading text-2xl text-white">
-                  Organizer-approved highlights
-                </h2>
+                <h2 className="font-heading text-2xl text-white">Revealed</h2>
               </div>
 
               <div className="mt-6 space-y-4">

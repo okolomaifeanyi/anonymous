@@ -5,7 +5,7 @@ import { createOrgAction } from "./actions";
 export default function NewAdminOrganizationPage() {
   return (
     <AdminShell
-      title="Create organization"
+      title="Create workspace"
       description="Create a new workspace."
     >
       <section className="max-w-2xl rounded-3xl border border-white/10 bg-[#0f141d] p-6">
@@ -15,7 +15,7 @@ export default function NewAdminOrganizationPage() {
               htmlFor="organization-name"
               className="text-sm font-medium text-white/75"
             >
-              Organization name
+              Workspace name
             </label>
             <input
               id="organization-name"
@@ -29,7 +29,7 @@ export default function NewAdminOrganizationPage() {
             type="submit"
             className="button-surface inline-flex items-center px-5 py-3 text-sm font-semibold text-[#0b0f15] transition"
           >
-            Create organization
+            Create workspace
           </button>
         </form>
       </section>

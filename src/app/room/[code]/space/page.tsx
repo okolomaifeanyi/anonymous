@@ -19,15 +19,15 @@ function readSearchParam(
 
 function getStatusMessage(status: string | undefined) {
   if (status === "vote-recorded") {
-    return "Your vote was recorded.";
+    return "Vote recorded.";
   }
 
   if (status === "message-submitted") {
-    return "Your message was submitted for organizer review.";
+    return "Message submitted.";
   }
 
   if (status === "message-revealed") {
-    return "Your message is now visible to the wider audience.";
+    return "Message is now visible.";
   }
 
   return null;

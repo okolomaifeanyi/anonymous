@@ -78,8 +78,7 @@ export default async function AdminOrganizationParticipantsPage({
           </h2>
           <p className="mt-3 text-sm text-white/65">
             Only approved people can enter. They sign in with the configured{" "}
-            {organization.participant_identifier_label.toLowerCase()} and only
-            see what their levels allow.
+            {organization.participant_identifier_label.toLowerCase()}.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -112,7 +111,7 @@ export default async function AdminOrganizationParticipantsPage({
                 Add participant
               </h3>
               <p className="mt-2 text-sm text-white/60">
-                Add one person and assign levels.
+                Add one person. Set levels.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -237,7 +236,7 @@ export default async function AdminOrganizationParticipantsPage({
           <div>
             <h3 className="font-heading text-xl text-white">Current roster</h3>
             <p className="mt-2 text-sm text-white/60">
-              See who can enter and what they can access.
+              Who can enter and what they can access.
             </p>
           </div>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">

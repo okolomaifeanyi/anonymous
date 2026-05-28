@@ -78,7 +78,7 @@ export default function ParticipantAccessForm({
     <article className="rounded-[2rem] border border-white/10 bg-[#101722]/95 p-8 shadow-[0_0_50px_rgba(8,15,26,0.45)]">
       <div className="space-y-3">
         <p className="text-xs uppercase tracking-[0.28em] text-white/55">
-          {isEmailFlow ? "Email verification" : "Access form"}
+          {isEmailFlow ? "Email" : "Access"}
         </p>
         <h2 className="font-heading text-2xl text-white md:text-3xl">
           Enter {organizationName}
@@ -86,9 +86,9 @@ export default function ParticipantAccessForm({
         <p className="text-sm text-white/65">
           {isEmailFlow
             ? verificationStep
-              ? `We sent a code to ${emailValue ? maskEmail(emailValue) : "your approved email"}. Enter it below to continue.`
-              : "Enter your approved email address and we will send a one-time code."
-            : "Use the exact identifier approved by the organizer. If it matches an active participant record, you will enter the unified room."}
+              ? `We sent a code to ${emailValue ? maskEmail(emailValue) : "your email"}. Enter it below.`
+              : "Enter your email to get a code."
+            : "Enter the approved identifier."}
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function ParticipantAccessForm({
                   htmlFor="code"
                   className="text-sm font-medium text-white/80"
                 >
-                  Verification code
+                  Code
                 </label>
                 <input
                   id="code"
@@ -143,7 +143,7 @@ export default function ParticipantAccessForm({
                 type="submit"
                 className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
               >
-                Verify code
+                Verify
               </button>
             </form>
 
@@ -154,13 +154,13 @@ export default function ParticipantAccessForm({
                 type="submit"
                 className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                Resend code
+                Resend
               </button>
               <a
                 href={`/room/${code}`}
                 className="text-sm text-white/55 underline-offset-4 transition hover:text-white hover:underline"
               >
-                Use a different email
+                Change email
               </a>
             </form>
           </div>
@@ -204,24 +204,24 @@ export default function ParticipantAccessForm({
             >
               {identifierLabel}
             </label>
-              <input
-                id="identifierValue"
-                name="identifierValue"
-                type={inputType}
-                inputMode={inputType === "tel" ? "tel" : undefined}
-                autoComplete={getIdentifierAutoComplete(identifierType)}
-                aria-invalid={error ? true : undefined}
-                aria-describedby={describedBy || undefined}
-                required
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
-              />
+            <input
+              id="identifierValue"
+              name="identifierValue"
+              type={inputType}
+              inputMode={inputType === "tel" ? "tel" : undefined}
+              autoComplete={getIdentifierAutoComplete(identifierType)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={describedBy || undefined}
+              required
+              className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
+            />
           </div>
 
           <button
             type="submit"
             className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
           >
-            Verify and enter room
+            Enter room
           </button>
         </form>
       )}

@@ -25,15 +25,9 @@ export default async function RoomEntryPage({
         <Breadcrumbs />
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
           <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.28em] text-white/60">
-              Participant room entry
-            </p>
-            <h1 className="font-heading text-3xl md:text-4xl">
-              Enter your room code
-            </h1>
+            <h1 className="font-heading text-3xl md:text-4xl">Enter room code</h1>
             <p className="max-w-xl text-sm text-white/65 md:text-base">
-              Use the room code shared by your organizer to continue into the
-              participant space.
+              Use the code from your organizer.
             </p>
           </div>
 
@@ -51,7 +45,7 @@ export default async function RoomEntryPage({
               type="submit"
               className="inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-white/90"
             >
-              Continue
+              Open room
             </button>
           </form>
         </section>

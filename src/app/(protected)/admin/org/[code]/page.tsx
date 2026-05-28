@@ -15,9 +15,7 @@ export default async function AdminOrganizationPage({
       <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
         <h2 className="font-heading text-2xl text-white">Overview</h2>
         <p className="mt-3 text-sm text-white/60">
-          Your admin shell is now in place. Add participants, define access
-          levels, publish internal votes, and moderate anonymous feedback from
-          this organization workspace.
+          Manage participants, levels, votes, and messages here.
         </p>
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
           <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
@@ -32,8 +30,7 @@ export default async function AdminOrganizationPage({
       <aside className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
         <h2 className="font-heading text-xl text-white">Next steps</h2>
         <p className="mt-3 text-sm text-white/60">
-          Create your first controlled organization or return to the admin
-          dashboard to switch contexts.
+          Go to the admin dashboard or keep editing this workspace.
         </p>
         <Link
           href="/admin"

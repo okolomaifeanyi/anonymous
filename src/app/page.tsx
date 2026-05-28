@@ -29,10 +29,6 @@ export default function Home() {
           </Link>
 
           <div className="space-y-6 pt-10 lg:pt-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.25em] text-white/70">
-              <ShieldCheckIcon className="h-4 w-4 text-emerald-300" />
-              Anonymous voting and feedback
-            </div>
             <h1 className="font-heading text-4xl leading-tight md:text-5xl">
               Anonymous voting and feedback for organizations.
             </h1>

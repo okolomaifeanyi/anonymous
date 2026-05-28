@@ -110,22 +110,21 @@ export default function MessageChannelForm({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="font-heading text-xl text-white">
-            Create message channel
+            Create channel
           </h3>
           <p className="mt-2 text-sm text-white/60">
-            Define who can submit notes and who can see revealed messages for
-            the channel.
+            Choose who submits and who sees reveals.
           </p>
         </div>
         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
-          {hasLevels ? "Ready" : "Levels required"}
+          {hasLevels ? "Ready" : "Levels needed"}
         </span>
       </div>
 
       <div className="mt-6 grid gap-5">
         <div className="grid gap-2">
           <label htmlFor="title" className="text-sm font-medium text-white/80">
-            Channel title
+            Title
           </label>
           <input
             id="title"
@@ -150,7 +149,7 @@ export default function MessageChannelForm({
 
         <div className="grid gap-2 sm:max-w-[240px]">
           <label htmlFor="status" className="text-sm font-medium text-white/80">
-            Initial status
+            Status
           </label>
           <select
             id="status"
@@ -166,10 +165,10 @@ export default function MessageChannelForm({
 
         <fieldset className="grid gap-2">
           <legend className="text-sm font-medium text-white/80">
-            Submit levels
+            Submit audience
           </legend>
           <p className="text-sm text-white/50">
-            Participants in these levels can submit anonymous messages.
+            People in these levels can submit.
           </p>
           {renderLevelCheckboxes(levels)}
         </fieldset>
@@ -179,8 +178,7 @@ export default function MessageChannelForm({
             Reveal audience
           </legend>
           <p className="text-sm text-white/50">
-            Choose whether revealed messages are visible to selected levels or
-            only selected approved participants.
+            Choose who sees revealed messages.
           </p>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -200,11 +198,9 @@ export default function MessageChannelForm({
                 className="mt-0.5 h-4 w-4 border-white/20 bg-transparent accent-cyan-300"
               />
               <span>
-                <span className="block font-medium text-white">
-                  Selected levels
-                </span>
+                <span className="block font-medium text-white">Levels</span>
                 <span className="mt-1 block text-xs text-white/55">
-                  Everyone in the chosen level groups can view the reveal.
+                  Everyone in the selected levels sees it.
                 </span>
               </span>
             </label>
@@ -226,11 +222,9 @@ export default function MessageChannelForm({
                 className="mt-0.5 h-4 w-4 border-white/20 bg-transparent accent-cyan-300 disabled:cursor-not-allowed"
               />
               <span>
-                <span className="block font-medium text-white">
-                  Selected participants
-                </span>
+                <span className="block font-medium text-white">Participants</span>
                 <span className="mt-1 block text-xs text-white/55">
-                  Only the approved people below can see the revealed message.
+                  Only the selected people see it.
                 </span>
               </span>
             </label>
@@ -242,7 +236,7 @@ export default function MessageChannelForm({
                 Reveal levels
               </legend>
               <p className="text-sm text-white/50">
-                Participants in these levels can see revealed entries.
+                People in these levels can see reveals.
               </p>
               {renderRevealLevelCheckboxes(levels)}
             </fieldset>
@@ -254,20 +248,19 @@ export default function MessageChannelForm({
                 Reveal participants
               </legend>
               <p className="text-sm text-white/50">
-                Select one or more approved participants from this organization.
+                Select one or more people.
               </p>
               {hasParticipants ? (
                 participantRevealSupported ? (
-                renderRevealParticipantCheckboxes(participants)
+                  renderRevealParticipantCheckboxes(participants)
                 ) : (
                   <p className="rounded-2xl border border-dashed border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
-                    Participant-only reveal audiences require the updated
-                    database schema. Use level-based reveal audience for now.
+                    Participant reveals need the updated database schema.
                   </p>
                 )
               ) : (
                 <p className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-white/55">
-                  No approved participants are available yet.
+                  No participants yet.
                 </p>
               )}
             </fieldset>
@@ -280,7 +273,7 @@ export default function MessageChannelForm({
         disabled={!hasLevels}
         className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Create channel
+        Create
       </button>
     </form>
   );

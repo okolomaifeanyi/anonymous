@@ -88,17 +88,20 @@ type ParticipantVoteBallotRow = {
   choice: VoteChoice;
 };
 
-type ParticipantRoomVoteRow = {
+type VoteRow = {
   id: string;
   title: string;
   description: string;
   tag: string;
-  image_url: string | null;
+  image_url?: string | null;
   status: VoteStatus;
   eligible_level_ids: string[];
   live_result_level_ids: string[];
   final_result_level_ids: string[];
+  created_at: string;
 };
+
+type ParticipantRoomVoteRow = VoteRow;
 
 type ParticipantVoteAccessRow = {
   id: string;
@@ -123,6 +126,19 @@ type CastParticipantVoteInput = {
   voteId: string;
   choice: VoteChoice;
 };
+
+const VOTE_COLUMNS_WITH_IMAGE =
+  "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at";
+const VOTE_COLUMNS_WITHOUT_IMAGE =
+  "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at";
+
+let voteImageColumnSupported: boolean | null = null;
+let voteImageColumnSupportPromise: Promise<boolean> | null = null;
+
+export function __setVoteImageColumnSupportForTests(value: boolean | null) {
+  voteImageColumnSupported = value;
+  voteImageColumnSupportPromise = null;
+}
 
 function normalizeLevelIds(levelIds: string[]) {
   return [...new Set(levelIds.map((value) => value.trim()).filter(Boolean))];
@@ -191,6 +207,122 @@ function getVoteImagePath(imageUrl: string) {
   } catch {
     return null;
   }
+}
+
+function isMissingVoteImageColumnError(message: string) {
+  const normalized = message.toLowerCase();
+
+  return (
+    normalized.includes("image_url") &&
+    normalized.includes("does not exist") &&
+    normalized.includes("column")
+  );
+}
+
+export async function supportsVoteImages() {
+  if (voteImageColumnSupported !== null) {
+    return voteImageColumnSupported;
+  }
+
+  if (!voteImageColumnSupportPromise) {
+    voteImageColumnSupportPromise = (async () => {
+      const { createAdminClient } = await import("@/lib/supabase/server");
+      const supabase = createAdminClient();
+      const { error } = await supabase
+        .from("votes")
+        .select("image_url")
+        .limit(1);
+
+      if (error) {
+        if (isMissingVoteImageColumnError(error.message)) {
+          voteImageColumnSupported = false;
+          return false;
+        }
+
+        throw new Error(`Failed to check vote image support: ${error.message}`);
+      }
+
+      voteImageColumnSupported = true;
+      return true;
+    })().finally(() => {
+      voteImageColumnSupportPromise = null;
+    });
+  }
+
+  return voteImageColumnSupportPromise;
+}
+
+function mapVoteRow(row: VoteRow): OrganizationVote {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    tag: row.tag,
+    image_url: row.image_url ?? null,
+    status: row.status,
+    eligible_level_ids: row.eligible_level_ids,
+    live_result_level_ids: row.live_result_level_ids,
+    final_result_level_ids: row.final_result_level_ids,
+    created_at: row.created_at,
+  };
+}
+
+async function selectVoteRow(
+  organizationId: string,
+  voteId: string,
+  useImageColumn: boolean,
+) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("votes")
+    .select(useImageColumn ? VOTE_COLUMNS_WITH_IMAGE : VOTE_COLUMNS_WITHOUT_IMAGE)
+    .eq("organization_id", organizationId)
+    .eq("id", voteId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load vote: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Vote not found.");
+  }
+
+  return mapVoteRow(data as unknown as VoteRow);
+}
+
+async function listVoteRows(organizationId: string) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const useImageColumn = await supportsVoteImages();
+  const { data, error } = await supabase
+    .from("votes")
+    .select(useImageColumn ? VOTE_COLUMNS_WITH_IMAGE : VOTE_COLUMNS_WITHOUT_IMAGE)
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (useImageColumn && isMissingVoteImageColumnError(error.message)) {
+      const fallback = await supabase
+        .from("votes")
+        .select(VOTE_COLUMNS_WITHOUT_IMAGE)
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false });
+
+      if (fallback.error) {
+        throw new Error(`Failed to load votes: ${fallback.error.message}`);
+      }
+
+      return (fallback.data ?? []).map((row) =>
+        mapVoteRow(row as unknown as VoteRow),
+      );
+    }
+
+    throw new Error(`Failed to load votes: ${error.message}`);
+  }
+
+  return (data ?? []).map((row) => mapVoteRow(row as unknown as VoteRow));
 }
 
 async function ensureVoteImageBucket() {
@@ -353,26 +485,22 @@ async function selectOrganizationId(
 }
 
 async function selectVoteById(organizationId: string, voteId: string) {
-  const { createAdminClient } = await import("@/lib/supabase/server");
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("votes")
-    .select(
-      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
-    )
-    .eq("organization_id", organizationId)
-    .eq("id", voteId)
-    .maybeSingle();
+  const useImageColumn = await supportsVoteImages();
 
-  if (error) {
-    throw new Error(`Failed to load vote: ${error.message}`);
+  try {
+    return await selectVoteRow(organizationId, voteId, useImageColumn);
+  } catch (error) {
+    if (
+      useImageColumn &&
+      error instanceof Error &&
+      isMissingVoteImageColumnError(error.message)
+    ) {
+      voteImageColumnSupported = false;
+      return selectVoteRow(organizationId, voteId, false);
+    }
+
+    throw error;
   }
-
-  if (!data) {
-    throw new Error("Vote not found.");
-  }
-
-  return data as OrganizationVote;
 }
 
 export async function upsertVoteBallot({
@@ -426,49 +554,34 @@ export async function createVote(input: CreateVoteInput) {
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient();
   const vote = parseVoteInput(input);
+  const useImageColumn = await supportsVoteImages();
   const voteValues = {
     ...(input.id ? { id: input.id } : {}),
     organization_id: input.organizationId,
     title: vote.title,
     description: vote.description,
     tag: vote.tag,
-    image_url: vote.imageUrl,
     eligible_level_ids: vote.eligibleLevelIds,
     live_result_level_ids: vote.liveResultLevelIds,
     final_result_level_ids: vote.finalResultLevelIds,
     status: input.status,
+    ...(useImageColumn ? { image_url: vote.imageUrl } : {}),
   };
   const { data, error } = await supabase
     .from("votes")
     .insert(voteValues)
-    .select(
-      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
-    )
+    .select(useImageColumn ? VOTE_COLUMNS_WITH_IMAGE : VOTE_COLUMNS_WITHOUT_IMAGE)
     .single();
 
   if (error) {
     throw new Error(`Failed to create vote: ${error.message}`);
   }
 
-  return data as OrganizationVote;
+  return mapVoteRow(data as unknown as VoteRow);
 }
 
 export async function listVotes(organizationId: string) {
-  const { createAdminClient } = await import("@/lib/supabase/server");
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("votes")
-    .select(
-      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
-    )
-    .eq("organization_id", organizationId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(`Failed to load votes: ${error.message}`);
-  }
-
-  return (data ?? []) as OrganizationVote[];
+  return listVoteRows(organizationId);
 }
 
 export async function listParticipantRoomVotes(
@@ -477,21 +590,7 @@ export async function listParticipantRoomVotes(
 ) {
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient();
-  const { data: voteData, error: voteError } = await supabase
-    .from("votes")
-    .select(
-      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
-    )
-    .eq("organization_id", organizationId)
-    .order("created_at", { ascending: false });
-
-  if (voteError) {
-    throw new Error(
-      `Failed to load participant room votes: ${voteError.message}`,
-    );
-  }
-
-  const votes = (voteData ?? []) as ParticipantRoomVoteRow[];
+  const votes = (await listVoteRows(organizationId)) as ParticipantRoomVoteRow[];
 
   if (votes.length === 0) {
     return [];
@@ -559,6 +658,7 @@ export async function updateVote(
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient();
   const vote = parseVoteInput(input);
+  const useImageColumn = await supportsVoteImages();
 
   await selectVoteById(organizationId, voteId);
 
@@ -568,24 +668,22 @@ export async function updateVote(
       title: vote.title,
       description: vote.description,
       tag: vote.tag,
-      image_url: vote.imageUrl,
       eligible_level_ids: vote.eligibleLevelIds,
       live_result_level_ids: vote.liveResultLevelIds,
       final_result_level_ids: vote.finalResultLevelIds,
       status: input.status,
+      ...(useImageColumn ? { image_url: vote.imageUrl } : {}),
     })
     .eq("organization_id", organizationId)
     .eq("id", voteId)
-    .select(
-      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
-    )
+    .select(useImageColumn ? VOTE_COLUMNS_WITH_IMAGE : VOTE_COLUMNS_WITHOUT_IMAGE)
     .single();
 
   if (error) {
     throw new Error(`Failed to update vote: ${error.message}`);
   }
 
-  return data as OrganizationVote;
+  return mapVoteRow(data as unknown as VoteRow);
 }
 
 export async function deleteVote(organizationId: string, voteId: string) {

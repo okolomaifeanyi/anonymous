@@ -44,7 +44,7 @@ export default function VoteFormFields({
     <div className="mt-6 grid gap-5">
       <div className="grid gap-2">
         <label htmlFor="title" className="text-sm font-medium text-white/80">
-          Vote title
+          Title
         </label>
         <input
           id="title"
@@ -73,7 +73,7 @@ export default function VoteFormFields({
 
       <div className="grid gap-2">
         <label htmlFor="imageFile" className="text-sm font-medium text-white/80">
-          Vote image
+          Image
         </label>
         <input
           id="imageFile"
@@ -108,7 +108,7 @@ export default function VoteFormFields({
         </div>
         <div className="grid gap-2">
           <label htmlFor="status" className="text-sm font-medium text-white/80">
-            Initial status
+            Status
           </label>
           <select
             id="status"
@@ -128,7 +128,7 @@ export default function VoteFormFields({
           Eligible levels
         </legend>
         <p className="text-sm text-white/50">
-          Participants in these levels can see and vote on this ballot.
+          People in these levels can vote.
         </p>
         {renderLevelCheckboxes(
           levels,
@@ -139,10 +139,10 @@ export default function VoteFormFields({
 
       <fieldset className="grid gap-2">
         <legend className="text-sm font-medium text-white/80">
-          Live results visibility
+          Live results
         </legend>
         <p className="text-sm text-white/50">
-          Choose who can see results while the vote is still active.
+          Who can see results while active.
         </p>
         {renderLevelCheckboxes(
           levels,
@@ -153,10 +153,10 @@ export default function VoteFormFields({
 
       <fieldset className="grid gap-2">
         <legend className="text-sm font-medium text-white/80">
-          Final results visibility
+          Final results
         </legend>
         <p className="text-sm text-white/50">
-          Choose who can see results after the vote is closed.
+          Who can see results after close.
         </p>
         {renderLevelCheckboxes(
           levels,

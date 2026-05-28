@@ -52,7 +52,7 @@ export default async function AdminOrganizationLevelsPage({
           </p>
           <h2 className="mt-3 font-heading text-2xl text-white">Levels</h2>
           <p className="mt-3 text-sm text-white/65">
-            Levels decide who can vote, submit messages, and see results.
+            Levels control who can vote, send messages, and see results.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -78,10 +78,10 @@ export default async function AdminOrganizationLevelsPage({
           action={action}
           className="rounded-3xl border border-white/10 bg-[#0f141d] p-6"
         >
-          <div>
+            <div>
               <h3 className="font-heading text-xl text-white">Add level</h3>
               <p className="mt-2 text-sm text-white/60">
-                Add a new audience group.
+                Add a level.
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export default async function AdminOrganizationLevelsPage({
           <div>
             <h3 className="font-heading text-xl text-white">Current levels</h3>
             <p className="mt-2 text-sm text-white/60">
-              These groups are reused across rooms, votes, and messages.
+              Used across rooms, votes, and messages.
             </p>
           </div>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">

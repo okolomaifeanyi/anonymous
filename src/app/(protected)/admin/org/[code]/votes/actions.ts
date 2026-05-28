@@ -10,6 +10,7 @@ import {
   deleteVoteImage,
   getVoteById,
   parseVoteInput,
+  supportsVoteImages,
   uploadVoteImage,
   updateVote,
 } from "@/lib/feedback/votes";
@@ -78,6 +79,12 @@ export async function addVote(code: string, formData: FormData) {
       finalResultLevelIds: formData.getAll("finalResultLevelIds").map(String),
     });
 
+    if (imageFile && !(await supportsVoteImages())) {
+      throw new Error(
+        "Vote images are not available until the database schema is updated.",
+      );
+    }
+
     const uploadedImage = imageFile
       ? await uploadVoteImage({
           organizationId: organization.id,
@@ -135,6 +142,12 @@ export async function editVote(
       liveResultLevelIds: formData.getAll("liveResultLevelIds").map(String),
       finalResultLevelIds: formData.getAll("finalResultLevelIds").map(String),
     });
+
+    if (imageFile && !(await supportsVoteImages())) {
+      throw new Error(
+        "Vote images are not available until the database schema is updated.",
+      );
+    }
 
     if (imageFile) {
       const uploadedImage = await uploadVoteImage({
