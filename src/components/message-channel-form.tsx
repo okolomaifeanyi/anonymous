@@ -103,8 +103,7 @@ export default function MessageChannelForm({
   const [revealAudienceType, setRevealAudienceType] =
     useState<MessageChannelRevealAudienceType>("levels");
   const hasParticipants = participants.length > 0;
-  const participantRevealAvailable =
-    participantRevealSupported && hasParticipants;
+  const participantRevealAvailable = hasParticipants;
 
   return (
     <form action={action} className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
@@ -259,18 +258,18 @@ export default function MessageChannelForm({
               <p className="text-sm text-white/50">
                 Select one or more approved participants from this organization.
               </p>
-              {participantRevealSupported ? (
-                hasParticipants ? (
+              {hasParticipants ? (
+                participantRevealSupported ? (
                 renderRevealParticipantCheckboxes(participants)
                 ) : (
-                <p className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-white/55">
-                  No approved participants are available yet.
-                </p>
+                  <p className="rounded-2xl border border-dashed border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+                    Participant-only reveal audiences require the updated
+                    database schema. Use level-based reveal audience for now.
+                  </p>
                 )
               ) : (
-                <p className="rounded-2xl border border-dashed border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
-                  Participant-only reveal audiences require the updated database
-                  schema. Use level-based reveal audience for now.
+                <p className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-white/55">
+                  No approved participants are available yet.
                 </p>
               )}
             </fieldset>
