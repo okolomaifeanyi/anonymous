@@ -80,6 +80,7 @@ type CreateVoteInput = ParseVoteInput & {
 };
 
 type ParticipantVoteBallotRow = {
+  vote_id: string;
   participant_id: string;
   choice: VoteChoice;
 };
@@ -93,10 +94,6 @@ type ParticipantRoomVoteRow = {
   eligible_level_ids: string[];
   live_result_level_ids: string[];
   final_result_level_ids: string[];
-  vote_ballots:
-    | ParticipantVoteBallotRow
-    | ParticipantVoteBallotRow[]
-    | null;
 };
 
 type ParticipantVoteAccessRow = {
@@ -284,36 +281,55 @@ export async function listVotes(organizationId: string) {
   return (data ?? []) as OrganizationVote[];
 }
 
-function normalizeParticipantVoteBallots(
-  ballots: ParticipantVoteBallotRow[] | ParticipantVoteBallotRow | null,
-) {
-  if (!ballots) {
-    return [];
-  }
-
-  return Array.isArray(ballots) ? ballots : [ballots];
-}
-
 export async function listParticipantRoomVotes(
   organizationId: string,
   participantId: string,
 ) {
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const { data: voteData, error: voteError } = await supabase
     .from("votes")
     .select(
-      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,vote_ballots(participant_id,choice)",
+      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
     )
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to load participant room votes: ${error.message}`);
+  if (voteError) {
+    throw new Error(
+      `Failed to load participant room votes: ${voteError.message}`,
+    );
   }
 
-  return ((data ?? []) as ParticipantRoomVoteRow[]).map((vote) => {
-    const ballots = normalizeParticipantVoteBallots(vote.vote_ballots);
+  const votes = (voteData ?? []) as ParticipantRoomVoteRow[];
+
+  if (votes.length === 0) {
+    return [];
+  }
+
+  const voteIds = votes.map(({ id }) => id);
+  const { data: ballotData, error: ballotError } = await supabase
+    .from("vote_ballots")
+    .select("vote_id,participant_id,choice")
+    .eq("organization_id", organizationId)
+    .in("vote_id", voteIds);
+
+  if (ballotError) {
+    throw new Error(
+      `Failed to load participant room vote ballots: ${ballotError.message}`,
+    );
+  }
+
+  const ballotsByVoteId = new Map<string, ParticipantVoteBallotRow[]>();
+
+  for (const ballot of (ballotData ?? []) as ParticipantVoteBallotRow[]) {
+    const ballots = ballotsByVoteId.get(ballot.vote_id) ?? [];
+    ballots.push(ballot);
+    ballotsByVoteId.set(ballot.vote_id, ballots);
+  }
+
+  return votes.map((vote) => {
+    const ballots = ballotsByVoteId.get(vote.id) ?? [];
     const supportCount = ballots.filter(
       (ballot) => ballot.choice === "support",
     ).length;
@@ -334,8 +350,8 @@ export async function listParticipantRoomVotes(
       opposeCount,
       totalCount: supportCount + opposeCount,
       participantChoice:
-        ballots.find((ballot) => ballot.participant_id === participantId)
-          ?.choice ?? null,
+        ballots.find((ballot) => ballot.participant_id === participantId)?.choice ??
+        null,
     } satisfies ParticipantRoomVoteRecord;
   });
 }

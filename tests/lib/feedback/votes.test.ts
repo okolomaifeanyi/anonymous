@@ -10,6 +10,7 @@ import filterRevealedMessages, {
 } from "@/lib/feedback/messages";
 import countVoteChoices, {
   parseVoteInput,
+  listParticipantRoomVotes,
   upsertVoteBallot,
 } from "@/lib/feedback/votes";
 
@@ -123,6 +124,99 @@ describe("feedback vote and message helpers", () => {
       liveResultLevelIds: ["level-2"],
       finalResultLevelIds: ["level-3"],
     });
+  });
+
+  it("listParticipantRoomVotes loads ballots without an embedded relation", async () => {
+    const voteSelects: string[] = [];
+    const ballotSelects: string[] = [];
+    const votesQuery = {
+      eq: vi.fn(),
+      order: vi.fn(),
+    };
+    votesQuery.eq.mockReturnValue(votesQuery);
+    votesQuery.order.mockResolvedValue({
+      data: [
+        {
+          id: "vote-1",
+          title: "Approve the budget",
+          description: "Budget proposal",
+          tag: "General",
+          status: "active",
+          eligible_level_ids: ["level-1"],
+          live_result_level_ids: ["level-1"],
+          final_result_level_ids: ["level-1"],
+          created_at: "2026-05-28T00:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
+
+    const ballotsQuery = {
+      eq: vi.fn(),
+      in: vi.fn(),
+    };
+    ballotsQuery.eq.mockReturnValue(ballotsQuery);
+    ballotsQuery.in.mockResolvedValue({
+      data: [
+        {
+          vote_id: "vote-1",
+          participant_id: "participant-1",
+          choice: "support",
+        },
+        {
+          vote_id: "vote-1",
+          participant_id: "participant-2",
+          choice: "oppose",
+        },
+      ],
+      error: null,
+    });
+
+    const from = vi.fn((table: string) => {
+      if (table === "votes") {
+        return {
+          select: vi.fn((columns: string) => {
+            voteSelects.push(columns);
+            return votesQuery;
+          }),
+        };
+      }
+
+      if (table === "vote_ballots") {
+        return {
+          select: vi.fn((columns: string) => {
+            ballotSelects.push(columns);
+            return ballotsQuery;
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    });
+
+    vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+
+    await expect(
+      listParticipantRoomVotes("org-1", "participant-1"),
+    ).resolves.toEqual([
+      {
+        id: "vote-1",
+        title: "Approve the budget",
+        description: "Budget proposal",
+        tag: "General",
+        status: "active",
+        eligibleLevelIds: ["level-1"],
+        liveResultLevelIds: ["level-1"],
+        finalResultLevelIds: ["level-1"],
+        supportCount: 1,
+        opposeCount: 1,
+        totalCount: 2,
+        participantChoice: "support",
+      },
+    ]);
+
+    expect(voteSelects[0]).not.toContain("vote_ballots(");
+    expect(ballotSelects[0]).toBe("vote_id,participant_id,choice");
   });
 
   it("filterRevealedMessages returns only revealed messages", () => {
