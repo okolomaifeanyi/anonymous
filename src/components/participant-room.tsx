@@ -253,76 +253,81 @@ export default function ParticipantRoom({
             ) : null}
 
             {hasMessageChannels ? (
-              <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.28em] text-white/55">
-                  Messages
-                </p>
-                <h2 className="font-heading text-2xl text-white">Messages</h2>
-                <p className="text-sm text-white/60">
-                  Send feedback anonymously. Only revealed messages return here.
-                </p>
-              </div>
+              <section className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.28em] text-white/55">
+                    Messages
+                  </p>
+                  <h2 className="font-heading text-2xl text-white">
+                    Messages
+                  </h2>
+                  <p className="text-sm text-white/60">
+                    Send feedback anonymously. Only revealed messages return here.
+                  </p>
+                </div>
 
-              <div className="mt-6 space-y-4">
-                {room.messageChannels.map((channel) => (
-                  <article
-                    key={channel.id}
-                    className="rounded-3xl border border-white/10 bg-[#0f141d] p-5"
-                  >
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/55">
-                        {channel.status}
-                      </span>
-                      <span className="text-xs text-white/45">
-                        {
-                          room.revealedMessages.filter(
+                <div className="space-y-4">
+                  {room.messageChannels.map((channel) => (
+                    <article
+                      key={channel.id}
+                      className="rounded-3xl border border-white/10 bg-[#0f141d] p-5"
+                    >
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/55">
+                          {channel.status}
+                        </span>
+                        <span className="text-xs text-white/45">
+                          {
+                            room.revealedMessages.filter(
+                              (message) => message.channelId === channel.id,
+                            ).length
+                          }{" "}
+                          visible
+                          {room.revealedMessages.filter(
                             (message) => message.channelId === channel.id,
-                          ).length
-                        }{" "}
-                        visible
-                        {room.revealedMessages.filter(
-                          (message) => message.channelId === channel.id,
-                        ).length === 1
-                          ? ""
-                          : "s"}
-                      </span>
-                    </div>
-                    <h3 className="mt-4 text-xl font-semibold text-white">
-                      {channel.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-white/65">
-                      {channel.prompt}
-                    </p>
+                          ).length === 1
+                            ? ""
+                            : "s"}
+                        </span>
+                      </div>
+                      <h3 className="mt-4 text-xl font-semibold text-white">
+                        {channel.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-white/65">
+                        {channel.prompt}
+                      </p>
 
-                    <form action={messageAction} className="mt-5 grid gap-3">
-                      <input type="hidden" name="channelId" value={channel.id} />
-                      <label
-                        htmlFor={`message-${channel.id}`}
-                        className="text-sm font-medium text-white/80"
-                      >
-                        Message
-                      </label>
-                      <textarea
-                        id={`message-${channel.id}`}
-                        name="body"
-                        rows={5}
-                        disabled={channel.status !== "open"}
-                        className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
-                      />
-                      <button
-                        type="submit"
-                        disabled={channel.status !== "open"}
-                        className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-white/30 disabled:text-white/60"
-                      >
-                        Send
-                      </button>
-                    </form>
-                  </article>
-                ))}
-
-              </div>
-              </article>
+                      <form action={messageAction} className="mt-5 grid gap-3">
+                        <input
+                          type="hidden"
+                          name="channelId"
+                          value={channel.id}
+                        />
+                        <label
+                          htmlFor={`message-${channel.id}`}
+                          className="text-sm font-medium text-white/80"
+                        >
+                          Message
+                        </label>
+                        <textarea
+                          id={`message-${channel.id}`}
+                          name="body"
+                          rows={5}
+                          disabled={channel.status !== "open"}
+                          className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+                        />
+                        <button
+                          type="submit"
+                          disabled={channel.status !== "open"}
+                          className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-white/30 disabled:text-white/60"
+                        >
+                          Send
+                        </button>
+                      </form>
+                    </article>
+                  ))}
+                </div>
+              </section>
             ) : null}
 
             {hasPrivateMessages ? (
