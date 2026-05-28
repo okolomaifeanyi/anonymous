@@ -106,7 +106,7 @@ export default async function AdminOrganizationMessagesPage({
   return (
     <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
       <div className="grid gap-6">
-        <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
+        <section className="space-y-6">
           <p className="text-[11px] uppercase tracking-[0.24em] text-emerald-200/70">
             Anonymous review
           </p>
@@ -140,7 +140,7 @@ export default async function AdminOrganizationMessagesPage({
               </dd>
             </div>
           </dl>
-        </article>
+        </section>
 
         {status === "channel-created" ? (
           <p
