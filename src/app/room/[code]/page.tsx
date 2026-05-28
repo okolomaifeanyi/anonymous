@@ -100,7 +100,7 @@ export default async function ParticipantAccessPage({
       <main className="relative mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 pb-24 pt-10">
         <Breadcrumbs />
         <section className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_0_40px_rgba(15,23,42,0.28)]">
+          <section className="space-y-8">
             <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
               Verify access
             </p>
@@ -146,7 +146,7 @@ export default async function ParticipantAccessPage({
                 Keep your email inbox open.
               </p>
             ) : null}
-          </article>
+          </section>
 
           <ParticipantAccessForm
             code={code}
