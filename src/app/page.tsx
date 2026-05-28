@@ -61,21 +61,19 @@ export default function Home() {
           <div className="space-y-4">
             {[
               {
-                title: "Admin-controlled organizations",
-                description:
-                  "Each organization gets a dedicated shell for oversight and follow-up.",
+                title: "Admin-managed workspaces",
+                description: "Create and manage each workspace from one place.",
                 icon: ShieldCheckIcon,
               },
               {
-                title: "Scoped participant rooms",
+                title: "Private participant rooms",
                 description:
-                  "Participants enter focused spaces designed for anonymous feedback and voting.",
+                  "People see only the votes and messages meant for them.",
                 icon: LockClosedIcon,
               },
               {
-                title: "Decision-ready outputs",
-                description:
-                  "Collect trustworthy internal signals before acting on them.",
+                title: "Clear internal signals",
+                description: "Collect feedback you can act on.",
                 icon: CheckBadgeIcon,
               },
             ].map((item) => (
@@ -95,37 +93,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </section>
-
-        <section className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              label: "Verified entry",
-              value: "1",
-              caption: "Admins sign in before managing an organization",
-            },
-            {
-              label: "Anonymous channel",
-              value: "2",
-              caption: "Messages and voting stay separate from identity",
-            },
-            {
-              label: "Admin shell",
-              value: "3",
-              caption: "Overview, navigation, and organization controls",
-            },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center"
-            >
-              <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-                {stat.label}
-              </p>
-              <p className="mt-3 text-3xl font-semibold">{stat.value}</p>
-              <p className="mt-2 text-xs text-white/60">{stat.caption}</p>
-            </div>
-          ))}
         </section>
       </main>
     </div>
