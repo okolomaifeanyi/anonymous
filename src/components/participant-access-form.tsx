@@ -143,7 +143,7 @@ export default function ParticipantAccessForm({
                   aria-invalid={error ? true : undefined}
                   aria-describedby={describedBy || undefined}
                   required
-                  maxLength={6}
+                  maxLength={8}
                   className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
                 />
               </div>
