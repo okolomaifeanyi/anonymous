@@ -71,7 +71,7 @@ export async function requestMagicLink(formData: FormData) {
         error: "supabase-auth",
         message:
           error.code === "over_email_send_rate_limit"
-            ? "Too many magic links were sent. Wait a minute and try again."
+            ? `Too many magic links were sent. Wait ${MAGIC_LINK_COOLDOWN_SECONDS} seconds and try again.`
             : error.message || "Could not send magic link.",
         ...(error.code === "over_email_send_rate_limit"
           ? { cooldown: String(MAGIC_LINK_COOLDOWN_SECONDS) }

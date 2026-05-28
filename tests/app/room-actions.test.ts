@@ -85,6 +85,23 @@ describe("participant room actions", () => {
     expect(mocks.setRoomSession).not.toHaveBeenCalled();
   });
 
+  it("shows the cooldown count when code sending is rate limited", async () => {
+    mocks.signInWithOtp.mockResolvedValue({
+      error: {
+        code: "over_email_send_rate_limit",
+        message: "",
+      },
+    });
+
+    const formData = new FormData();
+    formData.set("intent", "request");
+    formData.set("identifierValue", "USER@Example.com");
+
+    await expect(verifyParticipant("pulse", formData)).rejects.toThrow(
+      "REDIRECT:/room/pulse?error=rate-limited&message=Too+many+codes+were+sent.+Wait+60+seconds+and+try+again.&cooldown=60&step=code&identifier=user%40example.com",
+    );
+  });
+
   it("verifies a code and opens the participant room", async () => {
     mocks.verifyOtp.mockResolvedValue({ error: null });
 

@@ -22,6 +22,10 @@ export default async function LoginPage({
   const parsedCooldown = Number.parseInt(resolved?.cooldown ?? "", 10);
   const initialCooldown =
     Number.isFinite(parsedCooldown) && parsedCooldown > 0 ? parsedCooldown : 0;
+  const rateLimitMessage =
+    initialCooldown > 0
+      ? `Too many magic links were sent. Wait ${initialCooldown} seconds and try again.`
+      : "Too many magic links were sent. Wait a minute and try again.";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-transparent text-white">
@@ -70,7 +74,11 @@ export default async function LoginPage({
           )}
           {hasError && (
             <p className="mt-4 text-center text-xs text-rose-200">
-              {errorMessage ?? "Could not send magic link. Try again."}
+              {resolved?.error === "supabase-auth" &&
+              resolved?.cooldown &&
+              !resolved?.message
+                ? rateLimitMessage
+                : errorMessage ?? "Could not send magic link. Try again."}
             </p>
           )}
         </div>

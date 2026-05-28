@@ -22,6 +22,7 @@ function readSearchParam(
 function getAccessErrorMessage(
   error: string | undefined,
   message: string | undefined,
+  cooldown: string | undefined,
 ) {
   if (error === "identifier-required") {
     return "Enter the approved identifier.";
@@ -44,6 +45,15 @@ function getAccessErrorMessage(
   }
 
   if (error === "rate-limited") {
+    const parsedCooldown = Number.parseInt(cooldown ?? "", 10);
+
+    if (Number.isFinite(parsedCooldown) && parsedCooldown > 0) {
+      return (
+        message ??
+        `Too many codes were sent. Wait ${parsedCooldown} seconds and try again.`
+      );
+    }
+
     return message ?? "Too many codes were sent. Wait a minute and try again.";
   }
 
@@ -82,6 +92,7 @@ export default async function ParticipantAccessPage({
   const identifierValue = readSearchParam(resolvedSearchParams, "identifier");
   const verificationStep = readSearchParam(resolvedSearchParams, "step");
   const errorMessage = readSearchParam(resolvedSearchParams, "message");
+  const cooldown = readSearchParam(resolvedSearchParams, "cooldown");
   const emailVerificationEnabled =
     organization.participant_identifier_type === "email";
 
@@ -158,6 +169,7 @@ export default async function ParticipantAccessPage({
             error={getAccessErrorMessage(
               readSearchParam(resolvedSearchParams, "error"),
               errorMessage,
+              cooldown,
             )}
             status={getAccessStatusMessage(
               readSearchParam(resolvedSearchParams, "status"),

@@ -10,6 +10,8 @@ import {
 import { setRoomSession } from "@/lib/feedback/room-session";
 import { createClient } from "@/lib/server";
 
+const ROOM_CODE_COOLDOWN_SECONDS = 60;
+
 function buildRoomAccessPath(
   code: string,
   params: Record<string, string | undefined>,
@@ -78,8 +80,11 @@ export async function verifyParticipant(code: string, formData: FormData) {
                 : "request-failed",
             message:
               error.code === "over_email_send_rate_limit"
-                ? "Too many codes were sent. Wait a minute and try again."
+                ? `Too many codes were sent. Wait ${ROOM_CODE_COOLDOWN_SECONDS} seconds and try again.`
                 : error.message || "Could not send a verification code.",
+            ...(error.code === "over_email_send_rate_limit"
+              ? { cooldown: String(ROOM_CODE_COOLDOWN_SECONDS) }
+              : {}),
             step: "code",
             identifier: identifierValue,
           }),
