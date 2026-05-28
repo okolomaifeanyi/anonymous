@@ -1,5 +1,5 @@
 import type { IdentifierType } from "@/lib/feedback/types";
-import { filterRevealedMessages, listParticipantRoomMessageChannels, listParticipantRoomRevealedMessages, type ParticipantRoomMessageChannelRecord, type ParticipantRoomRevealedMessage } from "@/lib/feedback/messages";
+import { filterRevealedMessages, listParticipantRoomMessageChannels, listParticipantRoomPrivateMessages, listParticipantRoomRevealedMessages, type ParticipantRoomMessageChannelRecord, type ParticipantRoomPrivateMessage, type ParticipantRoomRevealedMessage } from "@/lib/feedback/messages";
 import { getOrganizationByCodeForRoom } from "@/lib/feedback/organizations";
 import {
   canSeeRevealedMessages,
@@ -108,6 +108,7 @@ export type ParticipantRoomData = {
     }
   >;
   messageChannels: ParticipantRoomMessageChannelRecord[];
+  privateMessages: ParticipantRoomPrivateMessage[];
   revealedMessages: ParticipantRoomRevealedMessage[];
   accessSummary: ReturnType<typeof getParticipantRoomAccessSummary>;
 };
@@ -515,12 +516,16 @@ export async function getParticipantRoomData(code: string) {
     return null;
   }
 
-  const [votes, messageChannels, revealedMessages] = await Promise.all([
+  const [votes, messageChannels, privateMessages, revealedMessages] = await Promise.all([
     listParticipantRoomVotes(
       context.organization.id,
       context.participant.id,
     ),
     listParticipantRoomMessageChannels(context.organization.id),
+    listParticipantRoomPrivateMessages(
+      context.organization.id,
+      context.participant.id,
+    ),
     listParticipantRoomRevealedMessages(context.organization.id),
   ]);
 
@@ -544,6 +549,7 @@ export async function getParticipantRoomData(code: string) {
       canSeeResults: canSeeVoteResults(context.participant.levelIds, vote),
     })),
     messageChannels: visibleSections.messageChannels,
+    privateMessages,
     revealedMessages: visibleMessages,
     accessSummary: getParticipantRoomAccessSummary({
       participantId: context.participant.id,

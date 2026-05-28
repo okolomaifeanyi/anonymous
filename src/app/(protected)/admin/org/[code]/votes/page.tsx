@@ -8,6 +8,7 @@ import {
 import { listVotes } from "@/lib/feedback/votes";
 
 import { addVote } from "./actions";
+import VoteFormFields from "./vote-form-fields";
 
 type VotesPageProps = {
   params: Promise<{ code: string }>;
@@ -41,30 +42,6 @@ function getLevelNames(levelIds: string[], levelsById: Map<string, OrganizationL
     .filter((name): name is string => Boolean(name));
 
   return names.length > 0 ? names : ["None selected"];
-}
-
-function renderLevelCheckboxes(
-  levels: OrganizationLevel[],
-  name: "eligibleLevelIds" | "liveResultLevelIds" | "finalResultLevelIds",
-) {
-  return (
-    <div className="mt-3 flex flex-wrap gap-2">
-      {levels.map((level) => (
-        <label
-          key={`${name}-${level.id}`}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80"
-        >
-          <input
-            type="checkbox"
-            name={name}
-            value={level.id}
-            className="h-4 w-4 rounded border-white/20 bg-[#0b1018] accent-cyan-300"
-          />
-          <span>{level.name}</span>
-        </label>
-      ))}
-    </div>
-  );
 }
 
 export default async function AdminOrganizationVotesPage({
@@ -135,12 +112,14 @@ export default async function AdminOrganizationVotesPage({
             </span>
           </div>
 
-          {status === "vote-created" ? (
+          {status === "vote-created" || status === "vote-deleted" ? (
             <p
               className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
               role="status"
             >
-              Vote created successfully.
+              {status === "vote-created"
+                ? "Vote created successfully."
+                : "Vote deleted successfully."}
             </p>
           ) : null}
 
@@ -165,106 +144,11 @@ export default async function AdminOrganizationVotesPage({
             </div>
           ) : null}
 
-          <div className="mt-6 grid gap-5">
-            <div className="grid gap-2">
-              <label htmlFor="title" className="text-sm font-medium text-white/80">
-                Vote title
-              </label>
-              <input
-                id="title"
-                name="title"
-                placeholder="Approve the budget proposal"
-                required
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <label
-                htmlFor="description"
-                className="text-sm font-medium text-white/80"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={4}
-                placeholder="Explain what members should consider before voting."
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
-              />
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_220px]">
-              <div className="grid gap-2">
-                <label htmlFor="tag" className="text-sm font-medium text-white/80">
-                  Tag
-                </label>
-                <input
-                  id="tag"
-                  name="tag"
-                  placeholder="General"
-                  className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
-                />
-              </div>
-              <div className="grid gap-2">
-                <label
-                  htmlFor="status"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Initial status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  defaultValue="active"
-                  className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-            </div>
-
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium text-white/80">
-                Eligible levels
-              </legend>
-              <p className="text-sm text-white/50">
-                Participants in these levels can see and vote on this ballot.
-              </p>
-              {renderLevelCheckboxes(levels, "eligibleLevelIds")}
-            </fieldset>
-
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium text-white/80">
-                Live results visibility
-              </legend>
-              <p className="text-sm text-white/50">
-                Choose who can see results while the vote is still active.
-              </p>
-              {renderLevelCheckboxes(levels, "liveResultLevelIds")}
-            </fieldset>
-
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium text-white/80">
-                Final results visibility
-              </legend>
-              <p className="text-sm text-white/50">
-                Choose who can see results after the vote is closed.
-              </p>
-              {renderLevelCheckboxes(levels, "finalResultLevelIds")}
-            </fieldset>
-          </div>
-
-          <button
-            type="submit"
+          <VoteFormFields
+            levels={levels}
+            submitLabel="Create vote"
             disabled={!hasLevels}
-            className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Create vote
-          </button>
+          />
         </form>
       </div>
 
@@ -292,6 +176,18 @@ export default async function AdminOrganizationVotesPage({
                   key={vote.id}
                   className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
                 >
+                  {vote.image_url ? (
+                    <div className="mb-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={vote.image_url}
+                        alt={vote.title}
+                        loading="lazy"
+                        className="h-44 w-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -312,6 +208,12 @@ export default async function AdminOrganizationVotesPage({
                       <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
                         {vote.status}
                       </span>
+                      <Link
+                        href={`/admin/org/${code}/votes/${vote.id}`}
+                        className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-3 py-1 text-cyan-100 transition hover:bg-cyan-300/20"
+                      >
+                        Edit
+                      </Link>
                       {createdAt ? (
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/50">
                           Added {createdAt}

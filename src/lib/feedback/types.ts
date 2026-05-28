@@ -18,6 +18,7 @@ export type ParticipantRoomVote = {
   id: string;
   title: string;
   status: VoteStatus;
+  imageUrl: string | null;
   eligibleLevelIds: string[];
   liveResultLevelIds: string[];
   finalResultLevelIds: string[];

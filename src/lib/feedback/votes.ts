@@ -8,6 +8,7 @@ export type OrganizationVote = {
   title: string;
   description: string;
   tag: string;
+  image_url: string | null;
   status: VoteStatus;
   eligible_level_ids: string[];
   live_result_level_ids: string[];
@@ -69,6 +70,7 @@ type ParseVoteInput = {
   title: string;
   description: string;
   tag: string;
+  imageUrl: string | null;
   eligibleLevelIds: string[];
   liveResultLevelIds: string[];
   finalResultLevelIds: string[];
@@ -77,6 +79,7 @@ type ParseVoteInput = {
 type CreateVoteInput = ParseVoteInput & {
   organizationId: string;
   status: VoteStatus;
+  id?: string;
 };
 
 type ParticipantVoteBallotRow = {
@@ -90,6 +93,7 @@ type ParticipantRoomVoteRow = {
   title: string;
   description: string;
   tag: string;
+  image_url: string | null;
   status: VoteStatus;
   eligible_level_ids: string[];
   live_result_level_ids: string[];
@@ -124,6 +128,165 @@ function normalizeLevelIds(levelIds: string[]) {
   return [...new Set(levelIds.map((value) => value.trim()).filter(Boolean))];
 }
 
+function normalizeImageUrl(value: string | null) {
+  const trimmed = (value ?? "").trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  let url: URL;
+
+  try {
+    url = new URL(trimmed);
+  } catch {
+    throw new Error("Image URL must be a valid http or https URL.");
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("Image URL must be a valid http or https URL.");
+  }
+
+  return trimmed;
+}
+
+const VOTE_IMAGE_BUCKET = "vote-images";
+
+type VoteImageUploadInput = {
+  organizationId: string;
+  voteId: string;
+  file: File;
+};
+
+function sanitizeFileName(fileName: string) {
+  const trimmed = fileName.trim();
+  const safeName = trimmed.replace(/[^a-zA-Z0-9._-]+/g, "-");
+
+  return safeName || "image";
+}
+
+function buildVoteImagePath(
+  organizationId: string,
+  voteId: string,
+  fileName: string,
+) {
+  return [
+    "vote-images",
+    organizationId,
+    voteId,
+    `${Date.now()}-${sanitizeFileName(fileName)}`,
+  ].join("/");
+}
+
+function getVoteImagePath(imageUrl: string) {
+  try {
+    const url = new URL(imageUrl);
+    const bucketPrefix = `/storage/v1/object/public/${VOTE_IMAGE_BUCKET}/`;
+
+    if (!url.pathname.startsWith(bucketPrefix)) {
+      return null;
+    }
+
+    return decodeURIComponent(url.pathname.slice(bucketPrefix.length));
+  } catch {
+    return null;
+  }
+}
+
+async function ensureVoteImageBucket() {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const bucketOptions = {
+    public: true,
+    allowedMimeTypes: [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/avif",
+    ],
+    fileSizeLimit: "5MB",
+  };
+  const createResult = await supabase.storage.createBucket(
+    VOTE_IMAGE_BUCKET,
+    bucketOptions,
+  );
+
+  if (
+    createResult.error &&
+    !createResult.error.message.toLowerCase().includes("already exists")
+  ) {
+    throw new Error(
+      `Failed to create vote image bucket: ${createResult.error.message}`,
+    );
+  }
+
+  const updateResult = await supabase.storage.updateBucket(
+    VOTE_IMAGE_BUCKET,
+    bucketOptions,
+  );
+
+  if (updateResult.error) {
+    throw new Error(
+      `Failed to configure vote image bucket: ${updateResult.error.message}`,
+    );
+  }
+}
+
+export async function uploadVoteImage({
+  organizationId,
+  voteId,
+  file,
+}: VoteImageUploadInput) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+
+  await ensureVoteImageBucket();
+
+  const path = buildVoteImagePath(organizationId, voteId, file.name);
+  const { error } = await supabase.storage.from(VOTE_IMAGE_BUCKET).upload(
+    path,
+    await file.arrayBuffer(),
+    {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    },
+  );
+
+  if (error) {
+    throw new Error(`Failed to upload vote image: ${error.message}`);
+  }
+
+  const { data } = supabase.storage
+    .from(VOTE_IMAGE_BUCKET)
+    .getPublicUrl(path);
+
+  return {
+    imagePath: path,
+    imageUrl: data.publicUrl,
+  };
+}
+
+export async function deleteVoteImage(imageUrl: string | null | undefined) {
+  if (!imageUrl) {
+    return;
+  }
+
+  const imagePath = getVoteImagePath(imageUrl);
+
+  if (!imagePath) {
+    return;
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage.from(VOTE_IMAGE_BUCKET).remove([imagePath]);
+
+  if (error) {
+    throw new Error(`Failed to delete vote image: ${error.message}`);
+  }
+}
+
 export function parseVoteInput(input: ParseVoteInput) {
   const title = input.title.trim();
 
@@ -141,6 +304,7 @@ export function parseVoteInput(input: ParseVoteInput) {
     title,
     description: input.description.trim(),
     tag: input.tag.trim() || "General",
+    imageUrl: normalizeImageUrl(input.imageUrl),
     eligibleLevelIds,
     liveResultLevelIds: normalizeLevelIds(input.liveResultLevelIds),
     finalResultLevelIds: normalizeLevelIds(input.finalResultLevelIds),
@@ -186,6 +350,29 @@ async function selectOrganizationId(
   }
 
   return data.organization_id;
+}
+
+async function selectVoteById(organizationId: string, voteId: string) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("votes")
+    .select(
+      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
+    )
+    .eq("organization_id", organizationId)
+    .eq("id", voteId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load vote: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Vote not found.");
+  }
+
+  return data as OrganizationVote;
 }
 
 export async function upsertVoteBallot({
@@ -239,20 +426,23 @@ export async function createVote(input: CreateVoteInput) {
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient();
   const vote = parseVoteInput(input);
+  const voteValues = {
+    ...(input.id ? { id: input.id } : {}),
+    organization_id: input.organizationId,
+    title: vote.title,
+    description: vote.description,
+    tag: vote.tag,
+    image_url: vote.imageUrl,
+    eligible_level_ids: vote.eligibleLevelIds,
+    live_result_level_ids: vote.liveResultLevelIds,
+    final_result_level_ids: vote.finalResultLevelIds,
+    status: input.status,
+  };
   const { data, error } = await supabase
     .from("votes")
-    .insert({
-      organization_id: input.organizationId,
-      title: vote.title,
-      description: vote.description,
-      tag: vote.tag,
-      eligible_level_ids: vote.eligibleLevelIds,
-      live_result_level_ids: vote.liveResultLevelIds,
-      final_result_level_ids: vote.finalResultLevelIds,
-      status: input.status,
-    })
+    .insert(voteValues)
     .select(
-      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
+      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
     )
     .single();
 
@@ -269,7 +459,7 @@ export async function listVotes(organizationId: string) {
   const { data, error } = await supabase
     .from("votes")
     .select(
-      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
+      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
     )
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
@@ -290,7 +480,7 @@ export async function listParticipantRoomVotes(
   const { data: voteData, error: voteError } = await supabase
     .from("votes")
     .select(
-      "id,title,description,tag,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
+      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
     )
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
@@ -342,6 +532,7 @@ export async function listParticipantRoomVotes(
       title: vote.title,
       description: vote.description,
       tag: vote.tag,
+      imageUrl: vote.image_url ?? null,
       status: vote.status,
       eligibleLevelIds: vote.eligible_level_ids ?? [],
       liveResultLevelIds: vote.live_result_level_ids ?? [],
@@ -354,6 +545,66 @@ export async function listParticipantRoomVotes(
         null,
     } satisfies ParticipantRoomVoteRecord;
   });
+}
+
+export async function getVoteById(organizationId: string, voteId: string) {
+  return selectVoteById(organizationId, voteId);
+}
+
+export async function updateVote(
+  organizationId: string,
+  voteId: string,
+  input: CreateVoteInput,
+) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const vote = parseVoteInput(input);
+
+  await selectVoteById(organizationId, voteId);
+
+  const { data, error } = await supabase
+    .from("votes")
+    .update({
+      title: vote.title,
+      description: vote.description,
+      tag: vote.tag,
+      image_url: vote.imageUrl,
+      eligible_level_ids: vote.eligibleLevelIds,
+      live_result_level_ids: vote.liveResultLevelIds,
+      final_result_level_ids: vote.finalResultLevelIds,
+      status: input.status,
+    })
+    .eq("organization_id", organizationId)
+    .eq("id", voteId)
+    .select(
+      "id,title,description,tag,image_url,status,eligible_level_ids,live_result_level_ids,final_result_level_ids,created_at",
+    )
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update vote: ${error.message}`);
+  }
+
+  return data as OrganizationVote;
+}
+
+export async function deleteVote(organizationId: string, voteId: string) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+
+  await selectVoteById(organizationId, voteId);
+
+  const { error } = await supabase
+    .from("votes")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("id", voteId)
+    .select("id")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to delete vote: ${error.message}`);
+  }
 }
 
 export async function castParticipantVote({

@@ -30,20 +30,24 @@ export type OrganizationMessageEntry = {
   channel_title: string;
 };
 
-type MessageOrganizationLookup = {
-  organization_id: string;
+export type AdminMessageEntry = OrganizationMessageEntry & {
+  revealAudienceType: MessageChannelRevealAudienceType;
+};
+
+type MessageAdminQueryResult<T> = Promise<{
+  data: T | null;
+  error: { message: string } | null;
+}>;
+
+type MessageAdminQuery<T = unknown> = {
+  eq: (column: string, value: string) => MessageAdminQuery<T>;
+  single: () => MessageAdminQueryResult<T>;
+  maybeSingle: () => MessageAdminQueryResult<T>;
 };
 
 type MessageAdminClient = {
   from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        single: () => Promise<{
-          data: MessageOrganizationLookup | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
+    select: (columns: string) => MessageAdminQuery;
     update: (values: { revealed: boolean }) => {
       eq: (column: string, value: string) => {
         eq: (column: string, value: string) => {
@@ -71,6 +75,7 @@ type RevealMessageEntryInput = {
   id: string;
   organizationId: string;
   revealed: boolean;
+  participantId?: string;
 };
 
 type CreateMessageChannelInput = {
@@ -88,6 +93,7 @@ type ToggleMessageRevealInput = {
   messageId: string;
   organizationId: string;
   revealed: boolean;
+  participantId?: string;
 };
 
 type DeleteMessageChannelInput = {
@@ -168,6 +174,8 @@ export type ParticipantRoomRevealedMessage = {
   revealParticipantIds: string[];
 };
 
+export type ParticipantRoomPrivateMessage = ParticipantRoomRevealedMessage;
+
 type MessageEntryRow = {
   id: string;
   channel_id: string;
@@ -191,6 +199,15 @@ type MessageEntryRow = {
 
 export function filterRevealedMessages<T extends MessageEntry>(messages: T[]) {
   return messages.filter((message) => message.revealed);
+}
+
+export function filterAdminVisibleMessageEntries(
+  entries: AdminMessageEntry[],
+) {
+  return entries.filter(
+    (entry) =>
+      !(entry.revealAudienceType === "participants" && !entry.revealed),
+  );
 }
 
 function normalizeLevelIds(levelIds: string[]) {
@@ -286,13 +303,13 @@ function parseMessageChannelInput(input: CreateMessageChannelInput) {
   };
 }
 
-async function selectMessageEntryOrganizationId(
+async function selectMessageEntryDetails(
   supabase: MessageAdminClient,
   id: string,
 ) {
   const { data, error } = await supabase
     .from("message_entries")
-    .select("organization_id")
+    .select("organization_id,channel_id")
     .eq("id", id)
     .single();
 
@@ -306,23 +323,103 @@ async function selectMessageEntryOrganizationId(
     throw new Error("Message entry not found.");
   }
 
-  return data.organization_id;
+  return data as { organization_id: string; channel_id: string };
+}
+
+async function selectMessageEntryChannelAudience(
+  supabase: MessageAdminClient,
+  channelId: string,
+) {
+  const { data, error } = await supabase
+    .from("message_channels")
+    .select("id,organization_id,reveal_audience_type")
+    .eq("id", channelId)
+    .single();
+
+  if (error) {
+    throw new Error(
+      `Failed to load message channel reveal audience: ${error.message}`,
+    );
+  }
+
+  if (!data) {
+    throw new Error("Message channel not found.");
+  }
+
+  return data as {
+    id: string;
+    organization_id: string;
+    reveal_audience_type: MessageChannelRevealAudienceType;
+  };
+}
+
+async function selectMessageEntryRevealParticipant(
+  supabase: MessageAdminClient,
+  channelId: string,
+  participantId: string,
+) {
+  const { data, error } = await supabase
+    .from("message_channel_reveal_participants")
+    .select("participant_id")
+    .eq("channel_id", channelId)
+    .eq("participant_id", participantId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      `Failed to validate message reveal access: ${error.message}`,
+    );
+  }
+
+  return data as { participant_id: string } | null;
 }
 
 export async function revealMessageEntry({
   id,
   organizationId,
   revealed,
+  participantId,
 }: RevealMessageEntryInput) {
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient() as unknown as MessageAdminClient;
-  const messageOrganizationId = await selectMessageEntryOrganizationId(
+  const messageEntryDetails = await selectMessageEntryDetails(
     supabase,
     id,
   );
 
-  if (messageOrganizationId !== organizationId) {
+  if (messageEntryDetails.organization_id !== organizationId) {
     throw new Error("Message entry must belong to the expected organization.");
+  }
+
+  const messageChannel = await selectMessageEntryChannelAudience(
+    supabase,
+    messageEntryDetails.channel_id,
+  );
+
+  if (messageChannel.organization_id !== organizationId) {
+    throw new Error("Message channel must belong to the expected organization.");
+  }
+
+  if (messageChannel.reveal_audience_type === "participants") {
+    if (!participantId) {
+      throw new Error(
+        "Participant-only messages are controlled by the selected participant.",
+      );
+    }
+
+    const revealParticipant = await selectMessageEntryRevealParticipant(
+      supabase,
+      messageChannel.id,
+      participantId,
+    );
+
+    if (!revealParticipant) {
+      throw new Error("You are not allowed to reveal this message.");
+    }
+  } else if (participantId) {
+    throw new Error(
+      "Participant reveal is only available for participant-only messages.",
+    );
   }
 
   const { data, error } = await supabase
@@ -639,6 +736,73 @@ export async function listParticipantRoomRevealedMessages(
       revealParticipantIds: revealParticipantIdsByChannel.get(message.channel_id) ?? [],
     } satisfies ParticipantRoomRevealedMessage;
   });
+}
+
+export async function listParticipantRoomPrivateMessages(
+  organizationId: string,
+  participantId: string,
+) {
+  const featureSupport = await getMessageChannelFeatureSupport();
+
+  if (!featureSupport.revealParticipants) {
+    return [];
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const [{ data, error }, revealParticipants] = await Promise.all([
+    supabase
+      .from("message_entries")
+      .select(
+        featureSupport.revealAudienceType
+          ? "id,body,revealed,created_at,channel_id,message_channels!message_entries_channel_id_organization_id_fkey!inner(title,organization_id,reveal_audience_type,reveal_level_ids)"
+          : "id,body,revealed,created_at,channel_id,message_channels!message_entries_channel_id_organization_id_fkey!inner(title,organization_id,reveal_level_ids)",
+      )
+      .eq("organization_id", organizationId)
+      .eq("revealed", false)
+      .order("created_at", { ascending: false }),
+    listMessageChannelRevealParticipants(organizationId),
+  ]);
+
+  if (error) {
+    throw new Error(
+      `Failed to load participant room private messages: ${error.message}`,
+    );
+  }
+
+  const revealParticipantIdsByChannel = new Map<string, string[]>();
+
+  for (const row of revealParticipants) {
+    const participantIds =
+      revealParticipantIdsByChannel.get(row.channel_id) ?? [];
+    participantIds.push(row.participant_id);
+    revealParticipantIdsByChannel.set(row.channel_id, participantIds);
+  }
+
+  return ((data ?? []) as unknown as ParticipantRoomRevealedMessageRow[])
+    .map((message) => {
+      const channel = Array.isArray(message.message_channels)
+        ? message.message_channels[0]
+        : message.message_channels;
+
+      return {
+        id: message.id,
+        body: message.body,
+        revealed: message.revealed,
+        createdAt: message.created_at,
+        channelId: message.channel_id,
+        channelTitle: channel?.title ?? "Untitled channel",
+        revealAudienceType: channel?.reveal_audience_type ?? "levels",
+        revealLevelIds: channel?.reveal_level_ids ?? [],
+        revealParticipantIds:
+          revealParticipantIdsByChannel.get(message.channel_id) ?? [],
+      } satisfies ParticipantRoomPrivateMessage;
+    })
+    .filter(
+      (message) =>
+        message.revealAudienceType === "participants" &&
+        message.revealParticipantIds.includes(participantId),
+    );
 }
 
 export async function createParticipantMessageEntry({

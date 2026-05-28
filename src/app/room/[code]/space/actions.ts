@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createParticipantMessageEntry } from "@/lib/feedback/messages";
+import {
+  createParticipantMessageEntry,
+  toggleMessageReveal,
+} from "@/lib/feedback/messages";
 import { getOrganizationByCodeForRoom } from "@/lib/feedback/organizations";
 import { getParticipantRoomContext } from "@/lib/feedback/participants";
 import { clearRoomSession } from "@/lib/feedback/room-session";
@@ -106,6 +109,35 @@ export async function submitParticipantMessage(
   redirect(
     buildRoomSpacePath(code, {
       status: "message-submitted",
+    }),
+  );
+}
+
+export async function revealParticipantMessage(
+  code: string,
+  formData: FormData,
+) {
+  const context = await requireParticipantRoomContext(code);
+
+  try {
+    await toggleMessageReveal({
+      messageId: String(formData.get("messageId") ?? ""),
+      organizationId: context.organization.id,
+      participantId: context.participant.id,
+      revealed: true,
+    });
+  } catch (error) {
+    redirect(
+      buildRoomSpacePath(code, {
+        error: getErrorMessage(error, "Unable to reveal your message."),
+      }),
+    );
+  }
+
+  revalidatePath(`/room/${code}/space`);
+  redirect(
+    buildRoomSpacePath(code, {
+      status: "message-revealed",
     }),
   );
 }

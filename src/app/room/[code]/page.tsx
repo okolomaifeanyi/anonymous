@@ -19,13 +19,32 @@ function readSearchParam(
   return Array.isArray(value) ? value[0] : value;
 }
 
-function getAccessErrorMessage(error: string | undefined) {
+function getAccessErrorMessage(
+  error: string | undefined,
+  message: string | undefined,
+) {
   if (error === "identifier-required") {
     return "Enter the approved identifier for this room.";
   }
 
   if (error === "access-denied") {
-    return "That identity is not approved for this room.";
+    return "That email is not approved for this room.";
+  }
+
+  if (error === "code-required") {
+    return "Enter the verification code from your email.";
+  }
+
+  if (error === "code-invalid") {
+    return "That code is invalid or expired. Request a new one.";
+  }
+
+  if (error === "request-failed" || error === "verification-failed") {
+    return message ?? "We could not complete verification. Try again.";
+  }
+
+  if (error === "rate-limited") {
+    return message ?? "Too many codes were sent. Wait a minute and try again.";
   }
 
   return null;
@@ -34,6 +53,10 @@ function getAccessErrorMessage(error: string | undefined) {
 function getAccessStatusMessage(status: string | undefined) {
   if (status === "signed-out") {
     return "You left the participant room. Verify again to re-enter.";
+  }
+
+  if (status === "code-sent") {
+    return "We sent a verification code to your email address.";
   }
 
   return null;
@@ -56,6 +79,11 @@ export default async function ParticipantAccessPage({
   }
 
   const context = await getParticipantRoomContext(code);
+  const identifierValue = readSearchParam(resolvedSearchParams, "identifier");
+  const verificationStep = readSearchParam(resolvedSearchParams, "step");
+  const errorMessage = readSearchParam(resolvedSearchParams, "message");
+  const emailVerificationEnabled =
+    organization.participant_identifier_type === "email";
 
   if (context) {
     redirect(`/room/${code}/space`);
@@ -80,9 +108,9 @@ export default async function ParticipantAccessPage({
               {organization.name}
             </h1>
             <p className="mt-3 max-w-xl text-sm text-white/65 md:text-base">
-              This room is limited to approved participants. Verify with the
-              identifier chosen by the organizer to enter the shared anonymous
-              workspace.
+              {emailVerificationEnabled
+                ? "This room is limited to approved participants. We will send a one-time code to your approved email address before you enter."
+                : "This room is limited to approved participants. Verify with the identifier chosen by the organizer to enter the shared anonymous workspace."}
             </p>
 
             <dl className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -114,6 +142,12 @@ export default async function ParticipantAccessPage({
                 <li>See results or revealed messages only when the organizer has allowed them for your audience.</li>
               </ul>
             </div>
+
+            {emailVerificationEnabled ? (
+              <p className="mt-6 text-sm text-white/55">
+                Keep the email inbox that matches your participant record open.
+              </p>
+            ) : null}
           </article>
 
           <ParticipantAccessForm
@@ -121,8 +155,11 @@ export default async function ParticipantAccessPage({
             organizationName={organization.name}
             identifierLabel={organization.participant_identifier_label}
             identifierType={organization.participant_identifier_type}
+            identifierValue={identifierValue ?? ""}
+            verificationStep={verificationStep === "code"}
             error={getAccessErrorMessage(
               readSearchParam(resolvedSearchParams, "error"),
+              errorMessage,
             )}
             status={getAccessStatusMessage(
               readSearchParam(resolvedSearchParams, "status"),

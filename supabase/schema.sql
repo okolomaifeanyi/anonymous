@@ -70,6 +70,7 @@ create table if not exists public.votes (
   title text not null,
   description text not null default '',
   tag text not null default 'General',
+  image_url text,
   status text not null default 'draft',
   eligible_level_ids uuid[] not null default '{}',
   live_result_level_ids uuid[] not null default '{}',
@@ -118,11 +119,29 @@ create table if not exists public.message_entries (
   created_at timestamptz not null default now()
 );
 
-alter table public.organization_participants
-  drop constraint if exists organization_participants_id_organization_id_key;
+alter table public.vote_ballots
+  drop constraint if exists vote_ballots_vote_id_organization_id_fkey;
 
-alter table public.organization_participants
-  add constraint organization_participants_id_organization_id_key
+alter table public.vote_ballots
+  drop constraint if exists vote_ballots_participant_id_organization_id_fkey;
+
+alter table public.message_channel_reveal_participants
+  drop constraint if exists message_channel_reveal_participants_channel_id_organization_id_fkey;
+
+alter table public.message_channel_reveal_participants
+  drop constraint if exists message_channel_reveal_participants_participant_id_organization_id_fkey;
+
+alter table public.message_entries
+  drop constraint if exists message_entries_channel_id_organization_id_fkey;
+
+alter table public.message_entries
+  drop constraint if exists message_entries_participant_id_organization_id_fkey;
+
+alter table public.message_channels
+  drop constraint if exists message_channels_id_organization_id_key;
+
+alter table public.message_channels
+  add constraint message_channels_id_organization_id_key
   unique (id, organization_id);
 
 alter table public.votes
@@ -132,11 +151,11 @@ alter table public.votes
   add constraint votes_id_organization_id_key
   unique (id, organization_id);
 
-alter table public.message_channels
-  drop constraint if exists message_channels_id_organization_id_key;
+alter table public.organization_participants
+  drop constraint if exists organization_participants_id_organization_id_key;
 
-alter table public.message_channels
-  add constraint message_channels_id_organization_id_key
+alter table public.organization_participants
+  add constraint organization_participants_id_organization_id_key
   unique (id, organization_id);
 
 alter table public.message_channels
@@ -222,6 +241,9 @@ alter table public.message_entries
 
 alter table public.votes
   drop constraint if exists votes_status_check;
+
+alter table public.votes
+  add column if not exists image_url text;
 
 alter table public.votes
   add constraint votes_status_check

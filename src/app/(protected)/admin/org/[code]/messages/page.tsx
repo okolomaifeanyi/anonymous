@@ -1,4 +1,5 @@
 import {
+  filterAdminVisibleMessageEntries,
   listMessageChannelRevealParticipants,
   listMessageChannels,
   listMessageEntries,
@@ -77,6 +78,7 @@ export default async function AdminOrganizationMessagesPage({
   const status = readSearchParam(resolvedSearchParams, "status");
   const error = readSearchParam(resolvedSearchParams, "error");
   const levelsById = new Map(levels.map((level) => [level.id, level]));
+  const channelsById = new Map(channels.map((channel) => [channel.id, channel]));
   const participantsById = new Map(
     participants.map((participant) => [participant.id, participant]),
   );
@@ -87,7 +89,14 @@ export default async function AdminOrganizationMessagesPage({
     revealParticipantsByChannel.set(row.channel_id, ids);
   }
   const hasLevels = levels.length > 0;
-  const revealedEntries = entries.filter((entry) => entry.revealed).length;
+  const adminVisibleEntries = filterAdminVisibleMessageEntries(
+    entries.map((entry) => ({
+      ...entry,
+      revealAudienceType:
+        channelsById.get(entry.channel_id)?.reveal_audience_type ?? "levels",
+    })),
+  );
+  const revealedEntries = adminVisibleEntries.filter((entry) => entry.revealed).length;
   const messageChannelParticipants = participants.map((participant) => ({
     id: participant.id,
     label: getParticipantLabel(participant),
@@ -120,7 +129,7 @@ export default async function AdminOrganizationMessagesPage({
                 Entries
               </dt>
               <dd className="mt-2 text-sm font-medium text-white/85">
-                {entries.length}
+                {adminVisibleEntries.length}
               </dd>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -324,25 +333,14 @@ export default async function AdminOrganizationMessagesPage({
             </span>
           </div>
 
-          {entries.length > 0 ? (
+          {adminVisibleEntries.length > 0 ? (
             <div className="mt-6 grid gap-3">
-              {entries.map((entry) => {
+              {adminVisibleEntries.map((entry) => {
                 const toggleAction = setMessageReveal.bind(null, code);
                 const createdAt = formatDate(entry.created_at);
 
-                return (
-                  <form
-                    key={entry.id}
-                    action={toggleAction}
-                    className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
-                  >
-                    <input type="hidden" name="messageId" value={entry.id} />
-                    <input
-                      type="hidden"
-                      name="revealed"
-                      value={String(!entry.revealed)}
-                    />
-
+                const content = (
+                  <>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-[11px] uppercase tracking-[0.24em] text-white/40">
@@ -370,12 +368,41 @@ export default async function AdminOrganizationMessagesPage({
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="mt-4 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
-                    >
-                      {entry.revealed ? "Hide message" : "Reveal message"}
-                    </button>
+                    {entry.revealAudienceType === "participants" ? (
+                      <p className="mt-4 text-sm text-white/45">
+                        Managed by the selected participant.
+                      </p>
+                    ) : (
+                      <button
+                        type="submit"
+                        className="mt-4 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                      >
+                        {entry.revealed ? "Hide message" : "Reveal message"}
+                      </button>
+                    )}
+                  </>
+                );
+
+                return entry.revealAudienceType === "participants" ? (
+                  <article
+                    key={entry.id}
+                    className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
+                  >
+                    {content}
+                  </article>
+                ) : (
+                  <form
+                    key={entry.id}
+                    action={toggleAction}
+                    className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
+                  >
+                    <input type="hidden" name="messageId" value={entry.id} />
+                    <input
+                      type="hidden"
+                      name="revealed"
+                      value={String(!entry.revealed)}
+                    />
+                    {content}
                   </form>
                 );
               })}

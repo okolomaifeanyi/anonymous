@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import Breadcrumbs from "@/components/breadcrumbs";
+import { normalizeOrganizationCode } from "@/lib/feedback/organization-code";
 
 export default async function RoomEntryPage({
   searchParams,
@@ -8,7 +9,7 @@ export default async function RoomEntryPage({
   searchParams: Promise<{ code?: string }>;
 }) {
   const resolved = await searchParams;
-  const code = resolved.code?.trim().toLowerCase();
+  const code = resolved.code ? normalizeOrganizationCode(resolved.code) : "";
 
   if (code) {
     redirect(`/room/${code}`);

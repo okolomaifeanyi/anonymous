@@ -1,5 +1,6 @@
 import {
   leaveParticipantRoom,
+  revealParticipantMessage,
   submitParticipantMessage,
   submitParticipantVote,
 } from "@/app/room/[code]/space/actions";
@@ -30,8 +31,39 @@ export default function ParticipantRoom({
     null,
     room.organizationCode,
   );
+  const revealAction = revealParticipantMessage.bind(
+    null,
+    room.organizationCode,
+  );
   const leaveAction = leaveParticipantRoom.bind(null, room.organizationCode);
   const visibleResults = room.votes.filter((vote) => vote.canSeeResults);
+  const hasVotes = room.votes.length > 0;
+  const hasMessageChannels = room.messageChannels.length > 0;
+  const hasPrivateMessages = room.privateMessages.length > 0;
+  const hasVisibleResults = visibleResults.length > 0;
+  const hasRevealedMessages = room.revealedMessages.length > 0;
+  const accessSummaryItems = [
+    {
+      label: "Active votes",
+      value: room.accessSummary.voteCount,
+      description: "Vote cards available to your audience.",
+    },
+    {
+      label: "Message channels",
+      value: room.accessSummary.messageChannelCount,
+      description: "Anonymous submission spaces assigned to you.",
+    },
+    {
+      label: "Visible results",
+      value: room.accessSummary.resultCount,
+      description: "Vote results currently visible to your audience.",
+    },
+    {
+      label: "Revealed messages",
+      value: room.accessSummary.revealedMessageCount,
+      description: "Messages the organizer made visible to your audience.",
+    },
+  ].filter((item) => item.value > 0);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0b0f15] text-white">
@@ -42,7 +74,7 @@ export default function ParticipantRoom({
       </div>
 
       <main className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 pb-24 pt-10">
-        <header className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_0_40px_rgba(15,23,42,0.28)] md:flex-row md:items-start md:justify-between">
+        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
               Participant room
@@ -90,59 +122,33 @@ export default function ParticipantRoom({
           </p>
         ) : null}
 
-        <section
-          aria-label="What you can access"
-          className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
-        >
-          <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-5">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-              Active votes
-            </p>
-            <p className="mt-3 text-3xl font-semibold text-white">
-              {room.accessSummary.voteCount}
-            </p>
-            <p className="mt-2 text-sm text-white/55">
-              Vote cards available to your audience.
-            </p>
-          </article>
-          <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-5">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-              Message channels
-            </p>
-            <p className="mt-3 text-3xl font-semibold text-white">
-              {room.accessSummary.messageChannelCount}
-            </p>
-            <p className="mt-2 text-sm text-white/55">
-              Anonymous submission spaces assigned to you.
-            </p>
-          </article>
-          <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-5">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-              Visible results
-            </p>
-            <p className="mt-3 text-3xl font-semibold text-white">
-              {room.accessSummary.resultCount}
-            </p>
-            <p className="mt-2 text-sm text-white/55">
-              Vote results currently visible to your audience.
-            </p>
-          </article>
-          <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-5">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-              Revealed messages
-            </p>
-            <p className="mt-3 text-3xl font-semibold text-white">
-              {room.accessSummary.revealedMessageCount}
-            </p>
-            <p className="mt-2 text-sm text-white/55">
-              Messages the organizer made visible to your audience.
-            </p>
-          </article>
-        </section>
+        {accessSummaryItems.length > 0 ? (
+          <section
+            aria-label="What you can access"
+            className="overflow-hidden rounded-3xl border border-white/10 bg-[#0f141d]"
+          >
+            <div className="grid divide-y divide-white/10 md:grid-cols-4 md:divide-x md:divide-y-0">
+              {accessSummaryItems.map((item) => (
+                <article key={item.label} className="p-5">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+                    {item.label}
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-white">
+                    {item.value}
+                  </p>
+                  <p className="mt-2 text-sm text-white/55">
+                    {item.description}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
           <section className="space-y-8">
-            <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
+            {hasVotes ? (
+              <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
                   Active votes
@@ -176,6 +182,18 @@ export default function ParticipantRoom({
                         </span>
                       ) : null}
                     </div>
+
+                    {vote.imageUrl ? (
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={vote.imageUrl}
+                          alt={vote.title}
+                          loading="lazy"
+                          className="h-52 w-full object-cover"
+                        />
+                      </div>
+                    ) : null}
 
                     <h3 className="mt-4 text-xl font-semibold text-white">
                       {vote.title}
@@ -236,15 +254,12 @@ export default function ParticipantRoom({
                   </article>
                 ))}
 
-                {room.votes.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-                    There are no vote items available to your audience yet.
-                  </div>
-                ) : null}
               </div>
-            </article>
+              </article>
+            ) : null}
 
-            <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
+            {hasMessageChannels ? (
+              <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
                   Anonymous messages
@@ -317,18 +332,63 @@ export default function ParticipantRoom({
                   </article>
                 ))}
 
-                {room.messageChannels.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-                    There are no anonymous message channels open to your
-                    audience yet.
-                  </div>
-                ) : null}
               </div>
-            </article>
+              </article>
+            ) : null}
+
+            {hasPrivateMessages ? (
+              <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.28em] text-white/55">
+                  Messages for you
+                </p>
+                <h2 className="font-heading text-2xl text-white">
+                  Decide when to reveal
+                </h2>
+                <p className="text-sm text-white/60">
+                  These messages are routed directly to you. You can reveal any
+                  one of them to the wider audience when you are ready.
+                </p>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {room.privateMessages.map((message) => (
+                  <article
+                    key={message.id}
+                    className="rounded-3xl border border-cyan-400/20 bg-[#0f141d] p-5"
+                  >
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-cyan-100">
+                        Private to you
+                      </span>
+                      <span className="text-xs text-white/45">
+                        {formatDate(message.createdAt)}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-xl font-semibold text-white">
+                      {message.channelTitle}
+                    </h3>
+                    <p className="mt-2 text-sm text-white/75">{message.body}</p>
+                    <form action={revealAction} className="mt-5">
+                      <input type="hidden" name="messageId" value={message.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
+                      >
+                        Reveal to everyone
+                      </button>
+                    </form>
+                  </article>
+                ))}
+
+              </div>
+              </article>
+            ) : null}
           </section>
 
           <aside className="space-y-8">
-            <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
+            {hasVisibleResults ? (
+              <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
                   Visible results
@@ -365,15 +425,12 @@ export default function ParticipantRoom({
                   </article>
                 ))}
 
-                {visibleResults.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-                    No result panels are visible to your audience yet.
-                  </div>
-                ) : null}
               </div>
-            </article>
+              </article>
+            ) : null}
 
-            <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
+            {hasRevealedMessages ? (
+              <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.28em] text-white/55">
                   Revealed messages
@@ -399,14 +456,9 @@ export default function ParticipantRoom({
                   </article>
                 ))}
 
-                {room.revealedMessages.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-                    The organizer has not revealed any messages to your
-                    audience yet.
-                  </div>
-                ) : null}
               </div>
-            </article>
+              </article>
+            ) : null}
           </aside>
         </div>
       </main>

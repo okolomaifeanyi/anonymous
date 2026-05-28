@@ -1,4 +1,8 @@
 import { createClient } from "@/lib/server";
+import {
+  buildOrganizationCodePrefix,
+  normalizeOrganizationCode,
+} from "@/lib/feedback/organization-code";
 
 export type Organization = {
   id: string;
@@ -7,22 +11,20 @@ export type Organization = {
 };
 
 async function generateUniqueCode(base: string) {
-  const code = base.toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 32);
+  const prefix = buildOrganizationCodePrefix(base) || "ORG";
   const supabase = await createClient();
-  let attempt = 1;
-  while (true) {
-    const testCode = code + (attempt > 1 ? `-${attempt}` : '');
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const digits = String(Math.floor(Math.random() * 100000)).padStart(5, "0");
+    const testCode = normalizeOrganizationCode(`${prefix}-${digits}`);
     const { data } = await supabase
       .from("organizations")
       .select("id")
       .eq("code", testCode)
       .maybeSingle();
     if (!data) return testCode;
-    attempt++;
   }
+
+  throw new Error("Unable to generate a unique organization code.");
 }
 
 async function rollbackOrganizationSetup(

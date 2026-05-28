@@ -26,6 +26,10 @@ function getStatusMessage(status: string | undefined) {
     return "Your message was submitted for organizer review.";
   }
 
+  if (status === "message-revealed") {
+    return "Your message is now visible to the wider audience.";
+  }
+
   return null;
 }
 

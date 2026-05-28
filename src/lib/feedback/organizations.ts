@@ -1,5 +1,6 @@
 import type { IdentifierType } from "@/lib/feedback/types";
 
+import { normalizeOrganizationCode } from "@/lib/feedback/organization-code";
 import { createClient } from "@/lib/server";
 import { notFound } from "next/navigation";
 
@@ -29,6 +30,7 @@ type OwnedOrganizationSummary = {
 };
 
 export async function requireOwnedOrganization(code: string) {
+  const normalizedCode = normalizeOrganizationCode(code);
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,7 +48,7 @@ export async function requireOwnedOrganization(code: string) {
     .select(
       "id,name,code,owner_id,participant_identifier_type,participant_identifier_label",
     )
-    .eq("code", code)
+    .eq("code", normalizedCode)
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -62,6 +64,7 @@ export async function requireOwnedOrganization(code: string) {
 }
 
 export async function getOrganizationByCodeForRoom(code: string) {
+  const normalizedCode = normalizeOrganizationCode(code);
   const { createAdminClient } = await import("@/lib/supabase/server");
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -69,7 +72,7 @@ export async function getOrganizationByCodeForRoom(code: string) {
     .select(
       "id,name,code,participant_identifier_type,participant_identifier_label",
     )
-    .eq("code", code)
+    .eq("code", normalizedCode)
     .maybeSingle();
 
   if (error) {
