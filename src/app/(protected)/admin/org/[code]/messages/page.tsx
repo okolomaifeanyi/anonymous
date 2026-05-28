@@ -2,6 +2,7 @@ import {
   listMessageChannelRevealParticipants,
   listMessageChannels,
   listMessageEntries,
+  getMessageChannelFeatureSupport,
 } from "@/lib/feedback/messages";
 import { requireOwnedOrganization } from "@/lib/feedback/organizations";
 import {
@@ -63,12 +64,13 @@ export default async function AdminOrganizationMessagesPage({
     searchParams ?? Promise.resolve({}),
   ]);
   const organization = await requireOwnedOrganization(code);
-  const [levels, channels, entries, participants, revealParticipants] = await Promise.all([
+  const [levels, channels, entries, participants, revealParticipants, featureSupport] = await Promise.all([
     getOrganizationLevels(organization.id),
     listMessageChannels(organization.id),
     listMessageEntries(organization.id),
     listParticipants(organization.id),
     listMessageChannelRevealParticipants(organization.id),
+    getMessageChannelFeatureSupport(),
   ]);
   const createChannelAction = addMessageChannel.bind(null, code);
   const status = readSearchParam(resolvedSearchParams, "status");
@@ -163,6 +165,7 @@ export default async function AdminOrganizationMessagesPage({
           levels={levels}
           participants={messageChannelParticipants}
           hasLevels={hasLevels}
+          participantRevealSupported={featureSupport.revealParticipants}
         />
       </div>
 

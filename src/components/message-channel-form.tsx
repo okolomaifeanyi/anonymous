@@ -18,6 +18,7 @@ type MessageChannelFormProps = {
   levels: OrganizationLevel[];
   participants: MessageChannelFormParticipant[];
   hasLevels: boolean;
+  participantRevealSupported: boolean;
 };
 
 function renderLevelCheckboxes(levels: OrganizationLevel[]) {
@@ -97,10 +98,13 @@ export default function MessageChannelForm({
   levels,
   participants,
   hasLevels,
+  participantRevealSupported,
 }: MessageChannelFormProps) {
   const [revealAudienceType, setRevealAudienceType] =
     useState<MessageChannelRevealAudienceType>("levels");
   const hasParticipants = participants.length > 0;
+  const participantRevealAvailable =
+    participantRevealSupported && hasParticipants;
 
   return (
     <form action={action} className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
@@ -213,7 +217,7 @@ export default function MessageChannelForm({
                 revealAudienceType === "participants"
                   ? "border-cyan-300/30 bg-cyan-300/10 text-white"
                   : "border-white/10 bg-[#0b1018] text-white/75"
-              } ${hasParticipants ? "" : "opacity-60"}`}
+              } ${participantRevealAvailable ? "" : "opacity-60"}`}
             >
               <input
                 type="radio"
@@ -221,7 +225,7 @@ export default function MessageChannelForm({
                 value="participants"
                 checked={revealAudienceType === "participants"}
                 onChange={() => setRevealAudienceType("participants")}
-                disabled={!hasParticipants}
+                disabled={!participantRevealAvailable}
                 className="mt-0.5 h-4 w-4 border-white/20 bg-transparent accent-cyan-300 disabled:cursor-not-allowed"
               />
               <span>
@@ -255,11 +259,18 @@ export default function MessageChannelForm({
               <p className="text-sm text-white/50">
                 Select one or more approved participants from this organization.
               </p>
-              {hasParticipants ? (
+              {participantRevealSupported ? (
+                hasParticipants ? (
                 renderRevealParticipantCheckboxes(participants)
-              ) : (
+                ) : (
                 <p className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-white/55">
                   No approved participants are available yet.
+                </p>
+                )
+              ) : (
+                <p className="rounded-2xl border border-dashed border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+                  Participant-only reveal audiences require the updated database
+                  schema. Use level-based reveal audience for now.
                 </p>
               )}
             </fieldset>

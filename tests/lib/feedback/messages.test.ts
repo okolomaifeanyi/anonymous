@@ -7,8 +7,39 @@ vi.mock("@/lib/supabase/server", () => ({
 import { createAdminClient } from "@/lib/supabase/server";
 import {
   createMessageChannel,
+  listMessageChannels,
   listParticipantRoomRevealedMessages,
 } from "@/lib/feedback/messages";
+
+function createMaybeSingleQuery(result: {
+  data: unknown;
+  error: { message: string } | null;
+}) {
+  return {
+    limit: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue(result),
+  };
+}
+
+function createListQuery(result: {
+  data: unknown;
+  error: { message: string } | null;
+}) {
+  return {
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockResolvedValue(result),
+  };
+}
+
+function createSingleInsertQuery(result: {
+  data: unknown;
+  error: { message: string } | null;
+}) {
+  const single = vi.fn().mockResolvedValue(result);
+  const select = vi.fn(() => ({ single }));
+
+  return { select };
+}
 
 describe("feedback message helpers", () => {
   beforeEach(() => {
@@ -16,9 +47,16 @@ describe("feedback message helpers", () => {
   });
 
   it("creates a participant-reveal channel and stores the selected participants", async () => {
-    const channelInsert = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
+    const channelSupportProbe = createMaybeSingleQuery({
+      data: { reveal_audience_type: "levels" },
+      error: null,
+    });
+    const revealParticipantSupportProbe = createMaybeSingleQuery({
+      data: null,
+      error: null,
+    });
+    const channelInsert = vi.fn(() =>
+      createSingleInsertQuery({
         data: {
           id: "channel-1",
           title: "Leadership feedback",
@@ -31,7 +69,7 @@ describe("feedback message helpers", () => {
         },
         error: null,
       }),
-    });
+    );
     const participantLookupQuery = {
       eq: vi.fn(),
       in: vi.fn(),
@@ -44,7 +82,17 @@ describe("feedback message helpers", () => {
     const revealParticipantInsert = vi.fn().mockResolvedValue({ error: null });
     const from = vi.fn((table: string) => {
       if (table === "message_channels") {
-        return { insert: channelInsert };
+        return {
+          select: vi.fn((columns: string) =>
+            columns === "reveal_audience_type"
+              ? channelSupportProbe
+              : createMaybeSingleQuery({
+                  data: null,
+                  error: { message: "Unexpected select in test" },
+                }),
+          ),
+          insert: channelInsert,
+        };
       }
 
       if (table === "organization_participants") {
@@ -54,7 +102,17 @@ describe("feedback message helpers", () => {
       }
 
       if (table === "message_channel_reveal_participants") {
-        return { insert: revealParticipantInsert };
+        return {
+          select: vi.fn((columns: string) =>
+            columns === "channel_id"
+              ? revealParticipantSupportProbe
+              : createMaybeSingleQuery({
+                  data: null,
+                  error: { message: "Unexpected select in test" },
+                }),
+          ),
+          insert: revealParticipantInsert,
+        };
       }
 
       throw new Error(`Unexpected table ${table}`);
@@ -100,7 +158,75 @@ describe("feedback message helpers", () => {
     ]);
   });
 
+  it("falls back to the legacy channel schema when reveal audience columns are unavailable", async () => {
+    const channelSupportProbe = createMaybeSingleQuery({
+      data: null,
+      error: { message: "column message_channels.reveal_audience_type does not exist" },
+    });
+    const listChannelsQuery = createListQuery({
+      data: [
+        {
+          id: "channel-1",
+          title: "General feedback",
+          prompt: "Share anything that matters.",
+          status: "open",
+          submit_level_ids: ["public"],
+          reveal_level_ids: [],
+          created_at: "2026-05-28T00:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
+    const from = vi.fn((table: string) => {
+      if (table === "message_channels") {
+        return {
+          select: vi.fn((columns: string) =>
+            columns === "reveal_audience_type"
+              ? channelSupportProbe
+              : listChannelsQuery,
+          ),
+        };
+      }
+
+      if (table === "message_channel_reveal_participants") {
+        return {
+          select: vi.fn(() =>
+            createMaybeSingleQuery({
+              data: null,
+              error: { message: "relation does not exist" },
+            }),
+          ),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    });
+
+    vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+
+    await expect(listMessageChannels("org-1")).resolves.toEqual([
+      {
+        id: "channel-1",
+        title: "General feedback",
+        prompt: "Share anything that matters.",
+        status: "open",
+        reveal_audience_type: "levels",
+        submit_level_ids: ["public"],
+        reveal_level_ids: [],
+        created_at: "2026-05-28T00:00:00.000Z",
+      },
+    ]);
+  });
+
   it("loads participant reveal audiences into participant-room messages", async () => {
+    const channelSupportProbe = createMaybeSingleQuery({
+      data: { reveal_audience_type: "levels" },
+      error: null,
+    });
+    const revealParticipantSupportProbe = createMaybeSingleQuery({
+      data: null,
+      error: null,
+    });
     const messageEntriesQuery = {
       eq: vi.fn(),
       order: vi.fn(),
@@ -136,15 +262,33 @@ describe("feedback message helpers", () => {
     });
 
     const from = vi.fn((table: string) => {
+      if (table === "message_channels") {
+        return {
+          select: vi.fn((columns: string) =>
+            columns === "reveal_audience_type"
+              ? channelSupportProbe
+              : createListQuery({ data: [], error: null }),
+          ),
+        };
+      }
+
       if (table === "message_entries") {
         return {
-          select: vi.fn(() => messageEntriesQuery),
+          select: vi.fn((columns: string) =>
+            columns.includes("reveal_audience_type")
+              ? messageEntriesQuery
+              : messageEntriesQuery,
+          ),
         };
       }
 
       if (table === "message_channel_reveal_participants") {
         return {
-          select: vi.fn(() => revealParticipantsQuery),
+          select: vi.fn((columns: string) =>
+            columns === "channel_id"
+              ? revealParticipantSupportProbe
+              : revealParticipantsQuery,
+          ),
         };
       }
 
