@@ -1,5 +1,6 @@
 import type { OrganizationLevel } from "@/lib/feedback/participants";
 import type { OrganizationVote } from "@/lib/feedback/votes";
+import SubmitButton from "@/components/ui/submit-button";
 
 type VoteFormFieldsProps = {
   levels: OrganizationLevel[];
@@ -165,13 +166,14 @@ export default function VoteFormFields({
         )}
       </fieldset>
 
-      <button
-        type="submit"
+      <SubmitButton
+        label={submitLabel}
+        pendingLabel={
+          submitLabel === "Save changes" ? "Saving..." : "Creating..."
+        }
         disabled={disabled}
         className="inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {submitLabel}
-      </button>
+      />
     </div>
   );
 }

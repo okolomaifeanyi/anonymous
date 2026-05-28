@@ -5,6 +5,7 @@ import {
   submitParticipantVote,
 } from "@/app/room/[code]/space/actions";
 import type { ParticipantRoomData } from "@/lib/feedback/participants";
+import SubmitButton from "@/components/ui/submit-button";
 
 type ParticipantRoomProps = {
   room: ParticipantRoomData;
@@ -94,12 +95,11 @@ export default function ParticipantRoom({
           </div>
 
           <form action={leaveAction}>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              Leave
-            </button>
+            <SubmitButton
+              label="Leave"
+              pendingLabel="Leaving..."
+              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+            />
           </form>
         </header>
 
@@ -201,24 +201,22 @@ export default function ParticipantRoom({
                       <form action={voteAction}>
                         <input type="hidden" name="voteId" value={vote.id} />
                         <input type="hidden" name="choice" value="support" />
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          label="Support"
+                          pendingLabel="Supporting..."
                           disabled={vote.status !== "active"}
                           className="inline-flex items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/15 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/25 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Support
-                        </button>
+                        />
                       </form>
                       <form action={voteAction}>
                         <input type="hidden" name="voteId" value={vote.id} />
                         <input type="hidden" name="choice" value="oppose" />
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          label="Oppose"
+                          pendingLabel="Opposing..."
                           disabled={vote.status !== "active"}
                           className="inline-flex items-center justify-center rounded-full border border-rose-400/30 bg-rose-400/15 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-400/25 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Oppose
-                        </button>
+                        />
                       </form>
                     </div>
 
@@ -316,13 +314,12 @@ export default function ParticipantRoom({
                           disabled={channel.status !== "open"}
                           className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
                         />
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          label="Send"
+                          pendingLabel="Sending..."
                           disabled={channel.status !== "open"}
                           className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:bg-white/30 disabled:text-white/60"
-                        >
-                          Send
-                        </button>
+                        />
                       </form>
                     </article>
                   ))}
@@ -362,12 +359,11 @@ export default function ParticipantRoom({
                     <p className="mt-2 text-sm text-white/75">{message.body}</p>
                     <form action={revealAction} className="mt-5">
                       <input type="hidden" name="messageId" value={message.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
-                      >
-                        Reveal
-                      </button>
+                      <SubmitButton
+                        label="Reveal"
+                        pendingLabel="Revealing..."
+                        className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-70"
+                      />
                     </form>
                   </article>
                 ))}

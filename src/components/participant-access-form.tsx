@@ -1,5 +1,6 @@
 import { verifyParticipant } from "@/app/room/[code]/actions";
 import type { IdentifierType } from "@/lib/feedback/types";
+import SubmitButton from "@/components/ui/submit-button";
 
 type ParticipantAccessFormProps = {
   code: string;
@@ -139,23 +140,21 @@ export default function ParticipantAccessForm({
                 />
               </div>
 
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
-              >
-                Verify
-              </button>
+              <SubmitButton
+                label="Verify"
+                pendingLabel="Verifying..."
+                className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-70"
+              />
             </form>
 
             <form action={action} className="flex flex-wrap items-center gap-3">
               <input type="hidden" name="intent" value="request" />
               <input type="hidden" name="identifierValue" value={emailValue} />
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Resend
-              </button>
+              <SubmitButton
+                label="Resend"
+                pendingLabel="Sending..."
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+              />
               <a
                 href={`/room/${code}`}
                 className="text-sm text-white/55 underline-offset-4 transition hover:text-white hover:underline"
@@ -187,12 +186,11 @@ export default function ParticipantAccessForm({
               />
             </div>
 
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
-            >
-              Send code
-            </button>
+            <SubmitButton
+              label="Send code"
+              pendingLabel="Sending..."
+              className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-70"
+            />
           </form>
         )
       ) : (
@@ -217,12 +215,11 @@ export default function ParticipantAccessForm({
             />
           </div>
 
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
-          >
-            Enter room
-          </button>
+          <SubmitButton
+            label="Enter room"
+            pendingLabel="Entering..."
+            className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-70"
+          />
         </form>
       )}
     </article>

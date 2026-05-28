@@ -37,9 +37,18 @@ export default function SubmitButton({
       type="submit"
       disabled={isDisabled}
       aria-live="polite"
+      aria-busy={pending || undefined}
       className="w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0b0f15] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {label}
+      <span className="inline-flex items-center gap-2">
+        {pending ? (
+          <span
+            aria-hidden="true"
+            className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+          />
+        ) : null}
+        {label}
+      </span>
     </button>
   );
 }

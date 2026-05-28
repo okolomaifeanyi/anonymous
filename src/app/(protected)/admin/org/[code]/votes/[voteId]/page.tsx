@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireOwnedOrganization } from "@/lib/feedback/organizations";
 import { getOrganizationLevels } from "@/lib/feedback/participants";
 import { getVoteById } from "@/lib/feedback/votes";
+import SubmitButton from "@/components/ui/submit-button";
 
 import { editVote, removeVote } from "../actions";
 import VoteFormFields from "../vote-form-fields";
@@ -112,12 +113,11 @@ export default async function AdminOrganizationVoteEditorPage({
               Back to votes
             </Link>
             <form action={deleteAction}>
-              <button
-                type="submit"
-                className="inline-flex items-center rounded-full border border-rose-400/30 bg-rose-400/10 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-400/20"
-              >
-                Delete vote
-              </button>
+              <SubmitButton
+                label="Delete vote"
+                pendingLabel="Deleting..."
+                className="inline-flex items-center rounded-full border border-rose-400/30 bg-rose-400/10 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+              />
             </form>
           </div>
         </article>

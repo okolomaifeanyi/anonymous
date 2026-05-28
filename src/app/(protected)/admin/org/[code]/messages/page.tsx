@@ -13,6 +13,7 @@ import {
 } from "@/lib/feedback/participants";
 import MessageChannelForm from "@/components/message-channel-form";
 import MessageChannelDeleteForm from "@/components/message-channel-delete-form";
+import SubmitButton from "@/components/ui/submit-button";
 
 import { addMessageChannel, deleteMessageChannelAction, setMessageReveal } from "./actions";
 
@@ -370,12 +371,13 @@ export default async function AdminOrganizationMessagesPage({
                         Managed by the selected participant.
                       </p>
                     ) : (
-                      <button
-                        type="submit"
-                        className="mt-4 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
-                      >
-                        {entry.revealed ? "Hide message" : "Reveal message"}
-                      </button>
+                      <SubmitButton
+                        label={entry.revealed ? "Hide message" : "Reveal message"}
+                        pendingLabel={
+                          entry.revealed ? "Hiding..." : "Revealing..."
+                        }
+                        className="mt-4 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      />
                     )}
                   </>
                 );

@@ -1,4 +1,5 @@
 import AdminShell from "@/components/admin-shell";
+import SubmitButton from "@/components/ui/submit-button";
 
 import { createOrgAction } from "./actions";
 
@@ -25,12 +26,11 @@ export default function NewAdminOrganizationPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="button-surface inline-flex items-center px-5 py-3 text-sm font-semibold text-[#0b0f15] transition"
-          >
-            Create workspace
-          </button>
+          <SubmitButton
+            label="Create workspace"
+            pendingLabel="Creating..."
+            className="button-surface inline-flex items-center px-5 py-3 text-sm font-semibold text-[#0b0f15] transition disabled:cursor-not-allowed disabled:opacity-70"
+          />
         </form>
       </section>
     </AdminShell>

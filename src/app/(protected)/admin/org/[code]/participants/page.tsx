@@ -5,6 +5,7 @@ import {
   getOrganizationLevels,
   listParticipants,
 } from "@/lib/feedback/participants";
+import SubmitButton from "@/components/ui/submit-button";
 
 import { addParticipant } from "./actions";
 
@@ -222,12 +223,11 @@ export default async function AdminOrganizationParticipantsPage({
             </fieldset>
           </div>
 
-          <button
-            type="submit"
-            className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100"
-          >
-            Add participant
-          </button>
+          <SubmitButton
+            label="Add participant"
+            pendingLabel="Adding..."
+            className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-70"
+          />
         </form>
       </div>
 

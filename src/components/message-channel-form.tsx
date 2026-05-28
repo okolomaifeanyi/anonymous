@@ -6,6 +6,7 @@ import type {
   MessageChannelRevealAudienceType,
 } from "@/lib/feedback/types";
 import type { OrganizationLevel } from "@/lib/feedback/participants";
+import SubmitButton from "@/components/ui/submit-button";
 
 type MessageChannelFormParticipant = {
   id: string;
@@ -268,13 +269,12 @@ export default function MessageChannelForm({
         </fieldset>
       </div>
 
-      <button
-        type="submit"
+      <SubmitButton
+        label="Create"
+        pendingLabel="Creating..."
         disabled={!hasLevels}
         className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Create
-      </button>
+      />
     </form>
   );
 }
