@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import Breadcrumbs from "@/components/breadcrumbs";
-import { normalizeOrganizationCode } from "@/lib/feedback/organization-code";
 
 export default async function RoomEntryPage({
   searchParams,
@@ -9,14 +8,14 @@ export default async function RoomEntryPage({
   searchParams: Promise<{ code?: string }>;
 }) {
   const resolved = await searchParams;
-  const code = resolved.code ? normalizeOrganizationCode(resolved.code) : "";
+  const code = resolved.code?.trim() ?? "";
 
   if (code) {
     redirect(`/room/${code}`);
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0b0f15] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-transparent text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-20 top-20 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" />
         <div className="absolute right-0 top-32 h-80 w-80 rounded-full bg-violet-500/20 blur-[140px]" />

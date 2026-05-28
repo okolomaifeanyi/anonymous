@@ -210,7 +210,7 @@ export default async function AdminOrganizationVotesPage({
                       </span>
                       <Link
                         href={`/admin/org/${code}/votes/${vote.id}`}
-                        className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-3 py-1 text-cyan-100 transition hover:bg-cyan-300/20"
+                        className="button-surface px-3 py-1 text-cyan-100 transition hover:text-cyan-100"
                       >
                         Edit
                       </Link>

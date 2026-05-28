@@ -28,7 +28,7 @@ export default function NewAdminOrganizationPage() {
 
           <button
             type="submit"
-            className="inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-white/90"
+            className="button-surface inline-flex items-center px-5 py-3 text-sm font-semibold text-[#0b0f15] transition"
           >
             Create organization
           </button>

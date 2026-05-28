@@ -99,9 +99,9 @@
   --button-foreground: #0b0f15;
   --button-border: rgb(15 23 42 / 0.12);
   --button-shadow:
-    0 1px 2px rgb(15 23 42 / 0.08),
+    0 4px 0 rgb(15 23 42 / 0.14),
     0 10px 24px rgb(15 23 42 / 0.08),
-    inset 0 1px 0 rgb(255 255 255 / 0.55);
+    inset 0 1px 0 rgb(255 255 255 / 0.65);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -147,25 +147,22 @@
 }
 
 @layer base {
-  :where(button, [data-slot="button"]) {
+  :where(button, [data-slot="button"], .button-surface) {
     background-color: var(--button-surface) !important;
-    background-image: var(--button-texture) !important;
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+    background-image: none !important;
     background-clip: padding-box;
     color: var(--button-foreground) !important;
     border-color: var(--button-border) !important;
     box-shadow: var(--button-shadow);
+    border-radius: 0.5rem !important;
     text-shadow: none;
   }
 
-  :where(button, [data-slot="button"]):not(:disabled):hover {
+  :where(button, [data-slot="button"], .button-surface):not(:disabled):hover {
     filter: brightness(1.02);
   }
 
-  :where(button, [data-slot="button"]):not(:disabled):active {
+  :where(button, [data-slot="button"], .button-surface):not(:disabled):active {
     transform: translateY(1px);
   }
 }
@@ -176,6 +173,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: #ffffff;
+    background-image: var(--button-texture);
+    background-attachment: fixed;
+    background-position: center;
+    background-size: cover;
   }
   html {
     @apply font-sans;

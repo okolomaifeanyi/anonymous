@@ -10,7 +10,7 @@ import Breadcrumbs from "@/components/breadcrumbs";
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0b0f15] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-transparent text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-20 top-20 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" />
         <div className="absolute right-0 top-32 h-80 w-80 rounded-full bg-violet-500/20 blur-[140px]" />
@@ -23,7 +23,7 @@ export default function Home() {
         <section className="relative grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <Link
             href="/auth/login"
-            className="absolute right-0 top-0 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/65 transition hover:bg-white/10 hover:text-white sm:px-5 sm:py-2.5"
+            className="button-surface absolute right-0 top-0 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white/65 transition hover:text-white sm:px-5 sm:py-2.5"
           >
             Admin sign in
           </Link>
@@ -55,14 +55,14 @@ export default function Home() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/room"
-                className="group inline-flex items-center justify-center gap-3 rounded-full bg-white px-7 py-4 text-base font-semibold text-[#0b0f15] shadow-lg shadow-white/10 transition hover:-translate-y-0.5 sm:px-8"
+                className="button-surface group inline-flex items-center justify-center gap-3 px-7 py-4 text-base font-semibold text-[#0b0f15] transition hover:-translate-y-0.5 sm:px-8"
               >
                 Enter room
                 <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
               </Link>
               <Link
                 href="/auth/login"
-                className="inline-flex items-center justify-center gap-3 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="button-surface inline-flex items-center justify-center gap-3 px-6 py-3 text-sm font-semibold text-white transition"
               >
                 Admin sign in
               </Link>

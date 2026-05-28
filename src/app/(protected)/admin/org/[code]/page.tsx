@@ -37,7 +37,7 @@ export default async function AdminOrganizationPage({
         </p>
         <Link
           href="/admin"
-          className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+          className="button-surface mt-6 inline-flex items-center px-4 py-2 text-sm font-medium text-white/80 transition hover:text-white"
         >
           Back to admin
         </Link>

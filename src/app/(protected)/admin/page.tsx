@@ -24,7 +24,7 @@ export default async function AdminPage() {
           </div>
           <Link
             href="/admin/org/new"
-            className="inline-flex w-fit items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-white/90"
+            className="button-surface inline-flex w-fit items-center px-5 py-3 text-sm font-semibold text-[#0b0f15] transition"
           >
             Create organization
           </Link>
@@ -51,7 +51,7 @@ export default async function AdminPage() {
                 </p>
                 <Link
                   href={`/admin/org/${organization.code}`}
-                  className="mt-5 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/85 transition hover:bg-white/10 hover:text-white"
+                  className="button-surface mt-5 inline-flex items-center px-4 py-2 text-sm font-medium text-white/85 transition hover:text-white"
                 >
                   Open workspace
                 </Link>
