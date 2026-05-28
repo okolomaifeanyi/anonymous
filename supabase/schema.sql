@@ -93,10 +93,19 @@ create table if not exists public.message_channels (
   title text not null,
   prompt text not null,
   status text not null default 'draft',
+  reveal_audience_type text not null default 'levels',
   submit_level_ids uuid[] not null default '{}',
   reveal_level_ids uuid[] not null default '{}',
   created_at timestamptz not null default now(),
   unique (id, organization_id)
+);
+
+create table if not exists public.message_channel_reveal_participants (
+  channel_id uuid not null references public.message_channels(id) on delete cascade,
+  participant_id uuid not null references public.organization_participants(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (channel_id, participant_id)
 );
 
 create table if not exists public.message_entries (
@@ -129,6 +138,27 @@ alter table public.message_channels
 alter table public.message_channels
   add constraint message_channels_id_organization_id_key
   unique (id, organization_id);
+
+alter table public.message_channels
+  add column if not exists reveal_audience_type text not null default 'levels';
+
+alter table public.message_channel_reveal_participants
+  drop constraint if exists message_channel_reveal_participants_channel_id_organization_id_fkey;
+
+alter table public.message_channel_reveal_participants
+  add constraint message_channel_reveal_participants_channel_id_organization_id_fkey
+  foreign key (channel_id, organization_id)
+  references public.message_channels(id, organization_id)
+  on delete cascade;
+
+alter table public.message_channel_reveal_participants
+  drop constraint if exists message_channel_reveal_participants_participant_id_organization_id_fkey;
+
+alter table public.message_channel_reveal_participants
+  add constraint message_channel_reveal_participants_participant_id_organization_id_fkey
+  foreign key (participant_id, organization_id)
+  references public.organization_participants(id, organization_id)
+  on delete cascade;
 
 alter table public.vote_ballots
   add column if not exists organization_id uuid references public.organizations(id) on delete cascade;
@@ -256,6 +286,11 @@ drop policy if exists "Owners can create message channels" on public.message_cha
 drop policy if exists "Owners can update message channels" on public.message_channels;
 drop policy if exists "Owners can delete message channels" on public.message_channels;
 
+drop policy if exists "Owners can read message channel reveal participants" on public.message_channel_reveal_participants;
+drop policy if exists "Owners can create message channel reveal participants" on public.message_channel_reveal_participants;
+drop policy if exists "Owners can update message channel reveal participants" on public.message_channel_reveal_participants;
+drop policy if exists "Owners can delete message channel reveal participants" on public.message_channel_reveal_participants;
+
 drop policy if exists "Owners can read message entries" on public.message_entries;
 drop policy if exists "Owners can create message entries" on public.message_entries;
 drop policy if exists "Owners can update message entries" on public.message_entries;
@@ -354,6 +389,7 @@ alter table public.participant_level_assignments enable row level security;
 alter table public.votes enable row level security;
 alter table public.vote_ballots enable row level security;
 alter table public.message_channels enable row level security;
+alter table public.message_channel_reveal_participants enable row level security;
 alter table public.message_entries enable row level security;
 
 create policy "Organizations are readable" on public.organizations
@@ -816,6 +852,58 @@ create policy "Owners can delete message channels" on public.message_channels
       select 1
       from public.organizations
       where organizations.id = message_channels.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can read message channel reveal participants" on public.message_channel_reveal_participants
+  for select
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channel_reveal_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can create message channel reveal participants" on public.message_channel_reveal_participants
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channel_reveal_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can update message channel reveal participants" on public.message_channel_reveal_participants
+  for update
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channel_reveal_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channel_reveal_participants.organization_id
+        and organizations.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete message channel reveal participants" on public.message_channel_reveal_participants
+  for delete
+  using (
+    exists (
+      select 1
+      from public.organizations
+      where organizations.id = message_channel_reveal_participants.organization_id
         and organizations.owner_id = auth.uid()
     )
   );

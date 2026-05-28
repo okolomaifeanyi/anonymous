@@ -1,11 +1,14 @@
 import type {
+  MessageChannelRevealAudienceType,
   ParticipantRoomMessageChannel,
   ParticipantRoomVote,
   VoteVisibilityRule,
 } from "@/lib/feedback/types";
 
 type RevealedMessageVisibilityRule = {
+  revealAudienceType: MessageChannelRevealAudienceType;
   revealLevelIds: string[];
+  revealParticipantIds: string[];
 };
 
 export function canAccessAudience(
@@ -30,9 +33,14 @@ export function canSeeVoteResults(
 }
 
 export function canSeeRevealedMessages(
+  participantId: string,
   participantLevelIds: string[],
   message: RevealedMessageVisibilityRule,
 ) {
+  if (message.revealAudienceType === "participants") {
+    return message.revealParticipantIds.includes(participantId);
+  }
+
   return canAccessAudience(participantLevelIds, message.revealLevelIds);
 }
 
@@ -58,6 +66,7 @@ type ParticipantRoomAccessSummaryInput<
   TVote extends ParticipantRoomVote,
   TMessageChannel extends ParticipantRoomMessageChannel,
 > = {
+  participantId: string;
   participantLevelIds: string[];
   votes: TVote[];
   messageChannels: TMessageChannel[];
@@ -108,7 +117,7 @@ export function getParticipantRoomAccessSummary(
       canSeeVoteResults(input.participantLevelIds, vote),
     ).length,
     revealedMessageCount: input.revealedMessages.filter((message) =>
-      canSeeRevealedMessages(input.participantLevelIds, message),
+      canSeeRevealedMessages(input.participantId, input.participantLevelIds, message),
     ).length,
   };
 }

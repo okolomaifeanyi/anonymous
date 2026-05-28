@@ -1,6 +1,7 @@
 import { canAccessAudience } from "@/lib/feedback/policy";
 import type {
   MessageChannelStatus,
+  MessageChannelRevealAudienceType,
   ParticipantRoomMessageChannel,
 } from "@/lib/feedback/types";
 
@@ -13,6 +14,7 @@ export type OrganizationMessageChannel = {
   title: string;
   prompt: string;
   status: MessageChannelStatus;
+  reveal_audience_type: MessageChannelRevealAudienceType;
   submit_level_ids: string[];
   reveal_level_ids: string[];
   created_at: string;
@@ -76,7 +78,9 @@ type CreateMessageChannelInput = {
   title: string;
   prompt: string;
   submitLevelIds: string[];
+  revealAudienceType: MessageChannelRevealAudienceType;
   revealLevelIds: string[];
+  revealParticipantIds: string[];
   status: MessageChannelStatus;
 };
 
@@ -105,14 +109,21 @@ type ParticipantRoomRevealedMessageRow = {
     | {
         title: string;
         organization_id: string;
+        reveal_audience_type: MessageChannelRevealAudienceType;
         reveal_level_ids: string[];
       }
     | {
         title: string;
         organization_id: string;
+        reveal_audience_type: MessageChannelRevealAudienceType;
         reveal_level_ids: string[];
       }[]
     | null;
+};
+
+type MessageChannelRevealParticipantRow = {
+  channel_id: string;
+  participant_id: string;
 };
 
 type ParticipantMessageChannelAccessRow = {
@@ -142,7 +153,9 @@ export type ParticipantRoomRevealedMessage = {
   createdAt: string;
   channelId: string;
   channelTitle: string;
+  revealAudienceType: MessageChannelRevealAudienceType;
   revealLevelIds: string[];
+  revealParticipantIds: string[];
 };
 
 type MessageEntryRow = {
@@ -156,10 +169,12 @@ type MessageEntryRow = {
     | {
         title: string;
         organization_id: string;
+        reveal_audience_type: MessageChannelRevealAudienceType;
       }
     | {
         title: string;
         organization_id: string;
+        reveal_audience_type: MessageChannelRevealAudienceType;
       }[]
     | null;
 };
@@ -170,6 +185,42 @@ export function filterRevealedMessages<T extends MessageEntry>(messages: T[]) {
 
 function normalizeLevelIds(levelIds: string[]) {
   return [...new Set(levelIds.map((value) => value.trim()).filter(Boolean))];
+}
+
+function normalizeParticipantIds(participantIds: string[]) {
+  return [...new Set(participantIds.map((value) => value.trim()).filter(Boolean))];
+}
+
+async function selectValidParticipantIds(
+  organizationId: string,
+  participantIds: string[],
+) {
+  const dedupedParticipantIds = normalizeParticipantIds(participantIds);
+
+  if (dedupedParticipantIds.length === 0) {
+    return dedupedParticipantIds;
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("organization_participants")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("status", "active")
+    .in("id", dedupedParticipantIds);
+
+  if (error) {
+    throw new Error(`Failed to validate reveal participants: ${error.message}`);
+  }
+
+  const validParticipantIds = new Set((data ?? []).map(({ id }) => id));
+
+  if (validParticipantIds.size !== dedupedParticipantIds.length) {
+    throw new Error("One or more selected participants are invalid.");
+  }
+
+  return dedupedParticipantIds;
 }
 
 function parseMessageChannelInput(input: CreateMessageChannelInput) {
@@ -257,6 +308,23 @@ export async function createMessageChannel(input: CreateMessageChannelInput) {
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient();
   const channel = parseMessageChannelInput(input);
+  const revealParticipantIds =
+    input.revealAudienceType === "participants"
+      ? await selectValidParticipantIds(
+          input.organizationId,
+          input.revealParticipantIds,
+        )
+      : [];
+  const revealLevelIds =
+    input.revealAudienceType === "levels" ? channel.revealLevelIds : [];
+
+  if (
+    input.revealAudienceType === "participants" &&
+    revealParticipantIds.length === 0
+  ) {
+    throw new Error("Select at least one participant for reveal access.");
+  }
+
   const { data, error } = await supabase
     .from("message_channels")
     .insert({
@@ -264,14 +332,41 @@ export async function createMessageChannel(input: CreateMessageChannelInput) {
       title: channel.title,
       prompt: channel.prompt,
       submit_level_ids: channel.submitLevelIds,
-      reveal_level_ids: channel.revealLevelIds,
+      reveal_audience_type: input.revealAudienceType,
+      reveal_level_ids: revealLevelIds,
       status: input.status,
     })
-    .select("id,title,prompt,status,submit_level_ids,reveal_level_ids,created_at")
+    .select(
+      "id,title,prompt,status,reveal_audience_type,submit_level_ids,reveal_level_ids,created_at",
+    )
     .single();
 
   if (error) {
     throw new Error(`Failed to create message channel: ${error.message}`);
+  }
+
+  if (input.revealAudienceType === "participants" && revealParticipantIds.length > 0) {
+    const { error: participantError } = await supabase
+      .from("message_channel_reveal_participants")
+      .insert(
+        revealParticipantIds.map((participantId) => ({
+          channel_id: data.id,
+          participant_id: participantId,
+          organization_id: input.organizationId,
+        })),
+      );
+
+    if (participantError) {
+      await supabase
+        .from("message_channels")
+        .delete()
+        .eq("id", data.id)
+        .eq("organization_id", input.organizationId);
+
+      throw new Error(
+        `Failed to save reveal participants: ${participantError.message}`,
+      );
+    }
   }
 
   return data as OrganizationMessageChannel;
@@ -300,7 +395,9 @@ export async function listMessageChannels(organizationId: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("message_channels")
-    .select("id,title,prompt,status,submit_level_ids,reveal_level_ids,created_at")
+    .select(
+      "id,title,prompt,status,reveal_audience_type,submit_level_ids,reveal_level_ids,created_at",
+    )
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
@@ -309,6 +406,24 @@ export async function listMessageChannels(organizationId: string) {
   }
 
   return (data ?? []) as OrganizationMessageChannel[];
+}
+
+export async function listMessageChannelRevealParticipants(organizationId: string) {
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("message_channel_reveal_participants")
+    .select("channel_id,participant_id")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(
+      `Failed to load message channel reveal participants: ${error.message}`,
+    );
+  }
+
+  return (data ?? []) as MessageChannelRevealParticipantRow[];
 }
 
 export async function listMessageEntries(organizationId: string) {
@@ -375,19 +490,30 @@ export async function listParticipantRoomRevealedMessages(
 ) {
   const { createAdminClient } = await import("@/lib/supabase/server");
   const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("message_entries")
-    .select(
-      "id,body,revealed,created_at,channel_id,message_channels!message_entries_channel_id_organization_id_fkey!inner(title,organization_id,reveal_level_ids)",
-    )
-    .eq("organization_id", organizationId)
-    .eq("revealed", true)
-    .order("created_at", { ascending: false });
+  const [{ data, error }, revealParticipants] = await Promise.all([
+    supabase
+      .from("message_entries")
+      .select(
+        "id,body,revealed,created_at,channel_id,message_channels!message_entries_channel_id_organization_id_fkey!inner(title,organization_id,reveal_audience_type,reveal_level_ids)",
+      )
+      .eq("organization_id", organizationId)
+      .eq("revealed", true)
+      .order("created_at", { ascending: false }),
+    listMessageChannelRevealParticipants(organizationId),
+  ]);
 
   if (error) {
     throw new Error(
       `Failed to load participant room revealed messages: ${error.message}`,
     );
+  }
+
+  const revealParticipantIdsByChannel = new Map<string, string[]>();
+
+  for (const row of revealParticipants) {
+    const participantIds = revealParticipantIdsByChannel.get(row.channel_id) ?? [];
+    participantIds.push(row.participant_id);
+    revealParticipantIdsByChannel.set(row.channel_id, participantIds);
   }
 
   return ((data ?? []) as ParticipantRoomRevealedMessageRow[]).map((message) => {
@@ -402,7 +528,9 @@ export async function listParticipantRoomRevealedMessages(
       createdAt: message.created_at,
       channelId: message.channel_id,
       channelTitle: channel?.title ?? "Untitled channel",
+      revealAudienceType: channel?.reveal_audience_type ?? "levels",
       revealLevelIds: channel?.reveal_level_ids ?? [],
+      revealParticipantIds: revealParticipantIdsByChannel.get(message.channel_id) ?? [],
     } satisfies ParticipantRoomRevealedMessage;
   });
 }

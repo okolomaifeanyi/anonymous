@@ -1,14 +1,15 @@
-import Link from "next/link";
-
 import {
+  listMessageChannelRevealParticipants,
   listMessageChannels,
   listMessageEntries,
 } from "@/lib/feedback/messages";
 import { requireOwnedOrganization } from "@/lib/feedback/organizations";
 import {
   getOrganizationLevels,
+  listParticipants,
   type OrganizationLevel,
 } from "@/lib/feedback/participants";
+import MessageChannelForm from "@/components/message-channel-form";
 
 import { addMessageChannel, setMessageReveal } from "./actions";
 
@@ -47,28 +48,10 @@ function getLevelNames(levelIds: string[], levelsById: Map<string, OrganizationL
   return names.length > 0 ? names : ["None selected"];
 }
 
-function renderLevelCheckboxes(
-  levels: OrganizationLevel[],
-  name: "submitLevelIds" | "revealLevelIds",
+function getParticipantLabel(
+  participant: { display_name: string | null; identifier_value: string },
 ) {
-  return (
-    <div className="mt-3 flex flex-wrap gap-2">
-      {levels.map((level) => (
-        <label
-          key={`${name}-${level.id}`}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80"
-        >
-          <input
-            type="checkbox"
-            name={name}
-            value={level.id}
-            className="h-4 w-4 rounded border-white/20 bg-[#0b1018] accent-emerald-300"
-          />
-          <span>{level.name}</span>
-        </label>
-      ))}
-    </div>
-  );
+  return participant.display_name ?? participant.identifier_value;
 }
 
 export default async function AdminOrganizationMessagesPage({
@@ -80,17 +63,33 @@ export default async function AdminOrganizationMessagesPage({
     searchParams ?? Promise.resolve({}),
   ]);
   const organization = await requireOwnedOrganization(code);
-  const [levels, channels, entries] = await Promise.all([
+  const [levels, channels, entries, participants, revealParticipants] = await Promise.all([
     getOrganizationLevels(organization.id),
     listMessageChannels(organization.id),
     listMessageEntries(organization.id),
+    listParticipants(organization.id),
+    listMessageChannelRevealParticipants(organization.id),
   ]);
   const createChannelAction = addMessageChannel.bind(null, code);
   const status = readSearchParam(resolvedSearchParams, "status");
   const error = readSearchParam(resolvedSearchParams, "error");
   const levelsById = new Map(levels.map((level) => [level.id, level]));
+  const participantsById = new Map(
+    participants.map((participant) => [participant.id, participant]),
+  );
+  const revealParticipantsByChannel = new Map<string, string[]>();
+  for (const row of revealParticipants) {
+    const ids = revealParticipantsByChannel.get(row.channel_id) ?? [];
+    ids.push(row.participant_id);
+    revealParticipantsByChannel.set(row.channel_id, ids);
+  }
   const hasLevels = levels.length > 0;
   const revealedEntries = entries.filter((entry) => entry.revealed).length;
+  const messageChannelParticipants = participants.map((participant) => ({
+    id: participant.id,
+    label: getParticipantLabel(participant),
+    description: participant.identifier_value,
+  })).filter((participant) => participantsById.get(participant.id)?.status === "active");
 
   return (
     <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
@@ -132,143 +131,39 @@ export default async function AdminOrganizationMessagesPage({
           </dl>
         </article>
 
-        <form
-          action={createChannelAction}
-          className="rounded-3xl border border-white/10 bg-[#0f141d] p-6"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3 className="font-heading text-xl text-white">
-                Create message channel
-              </h3>
-              <p className="mt-2 text-sm text-white/60">
-                Define who can submit notes and which levels can see revealed
-                entries for the channel.
-              </p>
-            </div>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
-              {hasLevels ? "Ready" : "Levels required"}
-            </span>
-          </div>
-
-          {status === "channel-created" ? (
-            <p
-              className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
-              role="status"
-            >
-              Message channel created successfully.
-            </p>
-          ) : null}
-
-          {status === "message-updated" ? (
-            <p
-              className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
-              role="status"
-            >
-              Message visibility updated successfully.
-            </p>
-          ) : null}
-
-          {error ? (
-            <p
-              className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
-              role="alert"
-            >
-              {error}
-            </p>
-          ) : null}
-
-          {!hasLevels ? (
-            <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 px-4 py-4 text-sm text-amber-100">
-              Add at least one audience level before opening a channel.{" "}
-              <Link
-                href={`/admin/org/${code}/levels`}
-                className="font-semibold underline underline-offset-4"
-              >
-                Manage levels
-              </Link>
-            </div>
-          ) : null}
-
-          <div className="mt-6 grid gap-5">
-            <div className="grid gap-2">
-              <label htmlFor="title" className="text-sm font-medium text-white/80">
-                Channel title
-              </label>
-              <input
-                id="title"
-                name="title"
-                placeholder="Leadership feedback"
-                required
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <label
-                htmlFor="prompt"
-                className="text-sm font-medium text-white/80"
-              >
-                Prompt
-              </label>
-              <textarea
-                id="prompt"
-                name="prompt"
-                rows={4}
-                placeholder="What should leadership hear this week?"
-                required
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
-              />
-            </div>
-
-            <div className="grid gap-2 sm:max-w-[240px]">
-              <label
-                htmlFor="status"
-                className="text-sm font-medium text-white/80"
-              >
-                Initial status
-              </label>
-              <select
-                id="status"
-                name="status"
-                defaultValue="open"
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
-              >
-                <option value="draft">Draft</option>
-                <option value="open">Open</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium text-white/80">
-                Submit levels
-              </legend>
-              <p className="text-sm text-white/50">
-                Participants in these levels can submit anonymous messages.
-              </p>
-              {renderLevelCheckboxes(levels, "submitLevelIds")}
-            </fieldset>
-
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium text-white/80">
-                Reveal levels
-              </legend>
-              <p className="text-sm text-white/50">
-                Participants in these levels can see revealed entries.
-              </p>
-              {renderLevelCheckboxes(levels, "revealLevelIds")}
-            </fieldset>
-          </div>
-
-          <button
-            type="submit"
-            disabled={!hasLevels}
-            className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+        {status === "channel-created" ? (
+          <p
+            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+            role="status"
           >
-            Create channel
-          </button>
-        </form>
+            Message channel created successfully.
+          </p>
+        ) : null}
+
+        {status === "message-updated" ? (
+          <p
+            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+            role="status"
+          >
+            Message visibility updated successfully.
+          </p>
+        ) : null}
+
+        {error ? (
+          <p
+            className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
+            role="alert"
+          >
+            {error}
+          </p>
+        ) : null}
+
+        <MessageChannelForm
+          action={createChannelAction}
+          levels={levels}
+          participants={messageChannelParticipants}
+          hasLevels={hasLevels}
+        />
       </div>
 
       <div className="grid gap-6">
@@ -342,16 +237,44 @@ export default async function AdminOrganizationMessagesPage({
                           Reveal audience
                         </dt>
                         <dd className="mt-2 flex flex-wrap gap-2">
-                          {getLevelNames(channel.reveal_level_ids, levelsById).map(
-                            (name) => (
-                              <span
-                                key={`${channel.id}-reveal-${name}`}
-                                className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
-                              >
-                                {name}
-                              </span>
-                            ),
-                          )}
+                          {channel.reveal_audience_type === "participants"
+                            ? (revealParticipantsByChannel.get(channel.id) ?? []).length > 0
+                              ? (revealParticipantsByChannel.get(channel.id) ?? []).map(
+                                  (participantId) => {
+                                    const participant = participantsById.get(participantId);
+                                    const label =
+                                      participant?.display_name ??
+                                      participant?.identifier_value ??
+                                      "Unknown participant";
+
+                                    return (
+                                      <span
+                                        key={`${channel.id}-reveal-participant-${participantId}`}
+                                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
+                                      >
+                                        {label}
+                                      </span>
+                                    );
+                                  },
+                                )
+                              : [
+                                  <span
+                                    key={`${channel.id}-reveal-participant-none`}
+                                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
+                                  >
+                                    None selected
+                                  </span>,
+                                ]
+                            : getLevelNames(channel.reveal_level_ids, levelsById).map(
+                                (name) => (
+                                  <span
+                                    key={`${channel.id}-reveal-${name}`}
+                                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
+                                  >
+                                    {name}
+                                  </span>
+                                ),
+                              )}
                         </dd>
                       </div>
                     </dl>

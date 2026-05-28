@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canAccessAudience,
+  canSeeRevealedMessages,
   canSeeVoteResults,
   getVisibleParticipantRoomSections,
 } from "@/lib/feedback/policy";
@@ -37,6 +38,32 @@ describe("feedback audience policy", () => {
         status: "closed",
         liveResultLevelIds: ["executive"],
         finalResultLevelIds: ["public"],
+      }),
+    ).toBe(true);
+  });
+
+  it("canSeeRevealedMessages allows only selected participants when the channel uses participant reveal mode", () => {
+    expect(
+      canSeeRevealedMessages("participant-1", ["public"], {
+        revealAudienceType: "participants",
+        revealLevelIds: ["executive"],
+        revealParticipantIds: ["participant-1"],
+      }),
+    ).toBe(true);
+
+    expect(
+      canSeeRevealedMessages("participant-2", ["public"], {
+        revealAudienceType: "participants",
+        revealLevelIds: ["executive"],
+        revealParticipantIds: ["participant-1"],
+      }),
+    ).toBe(false);
+
+    expect(
+      canSeeRevealedMessages("participant-2", ["public"], {
+        revealAudienceType: "levels",
+        revealLevelIds: ["public"],
+        revealParticipantIds: [],
       }),
     ).toBe(true);
   });

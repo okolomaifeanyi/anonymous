@@ -499,11 +499,12 @@ export async function getParticipantRoomContext(code: string) {
 }
 
 function filterParticipantRoomMessages(
+  participantId: string,
   participantLevelIds: string[],
   messages: ParticipantRoomRevealedMessage[],
 ) {
   return filterRevealedMessages(messages).filter((message) =>
-    canSeeRevealedMessages(participantLevelIds, message),
+    canSeeRevealedMessages(participantId, participantLevelIds, message),
   );
 }
 
@@ -529,6 +530,7 @@ export async function getParticipantRoomData(code: string) {
     messageChannels,
   });
   const visibleMessages = filterParticipantRoomMessages(
+    context.participant.id,
     context.participant.levelIds,
     revealedMessages,
   );
@@ -544,6 +546,7 @@ export async function getParticipantRoomData(code: string) {
     messageChannels: visibleSections.messageChannels,
     revealedMessages: visibleMessages,
     accessSummary: getParticipantRoomAccessSummary({
+      participantId: context.participant.id,
       participantLevelIds: context.participant.levelIds,
       votes: visibleSections.votes,
       messageChannels: visibleSections.messageChannels,

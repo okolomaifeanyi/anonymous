@@ -8,7 +8,10 @@ import {
   createMessageChannel,
   toggleMessageReveal,
 } from "@/lib/feedback/messages";
-import type { MessageChannelStatus } from "@/lib/feedback/types";
+import type {
+  MessageChannelRevealAudienceType,
+  MessageChannelStatus,
+} from "@/lib/feedback/types";
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
@@ -34,16 +37,32 @@ function parseMessageChannelStatus(value: string): MessageChannelStatus {
   throw new Error("Channel status is invalid.");
 }
 
+function parseMessageChannelRevealAudienceType(
+  value: string,
+): MessageChannelRevealAudienceType {
+  if (value === "levels" || value === "participants") {
+    return value;
+  }
+
+  throw new Error("Reveal audience is invalid.");
+}
+
 export async function addMessageChannel(code: string, formData: FormData) {
   const organization = await requireOwnedOrganization(code);
 
   try {
+    const revealAudienceType = parseMessageChannelRevealAudienceType(
+      String(formData.get("revealAudienceType") ?? "levels"),
+    );
+
     await createMessageChannel({
       organizationId: organization.id,
       title: String(formData.get("title") ?? ""),
       prompt: String(formData.get("prompt") ?? ""),
       submitLevelIds: formData.getAll("submitLevelIds").map(String),
+      revealAudienceType,
       revealLevelIds: formData.getAll("revealLevelIds").map(String),
+      revealParticipantIds: formData.getAll("revealParticipantIds").map(String),
       status: parseMessageChannelStatus(String(formData.get("status") ?? "open")),
     });
   } catch (error) {

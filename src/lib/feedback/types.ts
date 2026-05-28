@@ -6,6 +6,8 @@ export type VoteStatus = "draft" | "active" | "closed";
 
 export type MessageChannelStatus = "draft" | "open" | "closed";
 
+export type MessageChannelRevealAudienceType = "levels" | "participants";
+
 export type VoteVisibilityRule = {
   status: VoteStatus;
   liveResultLevelIds: string[];
