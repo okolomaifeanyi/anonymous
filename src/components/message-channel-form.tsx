@@ -130,9 +130,8 @@ export default function MessageChannelForm({
           <input
             id="title"
             name="title"
-            placeholder="Leadership feedback"
             required
-            className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+            className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
           />
         </div>
 
@@ -144,9 +143,8 @@ export default function MessageChannelForm({
             id="prompt"
             name="prompt"
             rows={4}
-            placeholder="What should leadership hear this week?"
             required
-            className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+            className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
           />
         </div>
 

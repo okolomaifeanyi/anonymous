@@ -49,10 +49,9 @@ export default function VoteFormFields({
         <input
           id="title"
           name="title"
-          placeholder="Approve the budget proposal"
           defaultValue={vote?.title ?? ""}
           required
-          className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+          className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
         />
       </div>
 
@@ -67,9 +66,8 @@ export default function VoteFormFields({
           id="description"
           name="description"
           rows={4}
-          placeholder="Explain what members should consider before voting."
           defaultValue={vote?.description ?? ""}
-          className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+          className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
         />
       </div>
 
@@ -104,9 +102,8 @@ export default function VoteFormFields({
           <input
             id="tag"
             name="tag"
-            placeholder="General"
             defaultValue={vote?.tag ?? ""}
-            className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+            className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
           />
         </div>
         <div className="grid gap-2">

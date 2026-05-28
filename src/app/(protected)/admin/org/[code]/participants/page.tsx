@@ -46,18 +46,6 @@ function getIdentifierInputType(identifierType: string) {
   return "text";
 }
 
-function getIdentifierPlaceholder(identifierType: string) {
-  if (identifierType === "email") {
-    return "person@company.com";
-  }
-
-  if (identifierType === "phone") {
-    return "+234 801 234 5678";
-  }
-
-  return "Enter approved identifier";
-}
-
 export default async function AdminOrganizationParticipantsPage({
   params,
   searchParams,
@@ -77,9 +65,6 @@ export default async function AdminOrganizationParticipantsPage({
   const identifierInputType = getIdentifierInputType(
     organization.participant_identifier_type,
   );
-  const identifierPlaceholder = getIdentifierPlaceholder(
-    organization.participant_identifier_type,
-  );
 
   return (
     <section className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -92,10 +77,9 @@ export default async function AdminOrganizationParticipantsPage({
             Approved participants
           </h2>
           <p className="mt-3 text-sm text-white/65">
-            Only approved identities can enter this organization workspace.
-            Participants sign in with the configured{" "}
+            Only approved people can enter. They sign in with the configured{" "}
             {organization.participant_identifier_label.toLowerCase()} and only
-            see votes or message channels allowed by their assigned levels.
+            see what their levels allow.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -128,8 +112,7 @@ export default async function AdminOrganizationParticipantsPage({
                 Add participant
               </h3>
               <p className="mt-2 text-sm text-white/60">
-                Register one person at a time with an optional display name and
-                any levels they should belong to immediately.
+                Add one person and assign levels.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -166,8 +149,7 @@ export default async function AdminOrganizationParticipantsPage({
               <input
                 id="displayName"
                 name="displayName"
-                placeholder="Executive Council"
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
               />
             </div>
 
@@ -190,9 +172,8 @@ export default async function AdminOrganizationParticipantsPage({
                       ? "tel"
                       : "off"
                 }
-                placeholder={identifierPlaceholder}
                 required
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
               />
             </div>
 
@@ -256,8 +237,7 @@ export default async function AdminOrganizationParticipantsPage({
           <div>
             <h3 className="font-heading text-xl text-white">Current roster</h3>
             <p className="mt-2 text-sm text-white/60">
-              Review who can access the room and which level groups they
-              currently belong to.
+              See who can enter and what they can access.
             </p>
           </div>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -320,7 +300,7 @@ export default async function AdminOrganizationParticipantsPage({
           </div>
         ) : (
           <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-            No participants have been added yet.
+            No participants yet.
           </div>
         )}
       </article>

@@ -112,8 +112,7 @@ export default async function AdminOrganizationMessagesPage({
           </p>
           <h2 className="mt-3 font-heading text-2xl text-white">Messages</h2>
           <p className="mt-3 text-sm text-white/65">
-            Open structured channels for anonymous feedback and decide which
-            responses are revealed back to participants.
+            Create anonymous channels and choose what gets revealed.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -196,8 +195,7 @@ export default async function AdminOrganizationMessagesPage({
                 Current channels
               </h3>
               <p className="mt-2 text-sm text-white/60">
-                Review who can submit and who can see revealed messages in each
-                channel.
+                See who can submit and who can see the reveal.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -314,7 +312,7 @@ export default async function AdminOrganizationMessagesPage({
             </div>
           ) : (
             <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-              No channels have been created for this organization yet.
+              No channels yet.
             </div>
           )}
         </article>
@@ -324,8 +322,7 @@ export default async function AdminOrganizationMessagesPage({
             <div>
               <h3 className="font-heading text-xl text-white">Recent entries</h3>
               <p className="mt-2 text-sm text-white/60">
-                Reveal individual messages when they are appropriate to share
-                back with the audience.
+                Reveal messages when needed.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -409,7 +406,7 @@ export default async function AdminOrganizationMessagesPage({
             </div>
           ) : (
             <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-              No anonymous messages have been submitted yet.
+              No messages yet.
             </div>
           )}
         </article>

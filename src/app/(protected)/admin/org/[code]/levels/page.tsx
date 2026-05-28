@@ -52,9 +52,7 @@ export default async function AdminOrganizationLevelsPage({
           </p>
           <h2 className="mt-3 font-heading text-2xl text-white">Levels</h2>
           <p className="mt-3 text-sm text-white/65">
-            Levels define who can participate in votes, submit messages, and
-            view results. New levels are appended to the end of the current
-            order so your audience structure stays predictable.
+            Levels decide who can vote, submit messages, and see results.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -81,10 +79,9 @@ export default async function AdminOrganizationLevelsPage({
           className="rounded-3xl border border-white/10 bg-[#0f141d] p-6"
         >
           <div>
-            <h3 className="font-heading text-xl text-white">Add level</h3>
-            <p className="mt-2 text-sm text-white/60">
-              Create another audience group for permission-based access across
-              organizer workflows.
+              <h3 className="font-heading text-xl text-white">Add level</h3>
+              <p className="mt-2 text-sm text-white/60">
+                Add a new audience group.
             </p>
           </div>
 
@@ -113,9 +110,8 @@ export default async function AdminOrganizationLevelsPage({
             <input
               id="name"
               name="name"
-              placeholder="Executive Council"
               required
-              className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+              className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
             />
           </div>
 
@@ -133,8 +129,7 @@ export default async function AdminOrganizationLevelsPage({
           <div>
             <h3 className="font-heading text-xl text-white">Current levels</h3>
             <p className="mt-2 text-sm text-white/60">
-              This ordered list is what organizers will reuse when targeting
-              rooms, votes, and message visibility rules.
+              These groups are reused across rooms, votes, and messages.
             </p>
           </div>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -178,7 +173,7 @@ export default async function AdminOrganizationLevelsPage({
           </div>
         ) : (
           <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-            No levels have been created for this organization yet.
+            No levels yet.
           </div>
         )}
       </article>

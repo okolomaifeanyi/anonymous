@@ -9,7 +9,7 @@ export default async function AdminPage() {
   return (
     <AdminShell
       title="Admin dashboard"
-      description="Create and manage organizations for verified anonymous feedback, controlled participation, and internal voting."
+      description="Create and manage workspaces."
     >
       <section className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -18,8 +18,7 @@ export default async function AdminPage() {
               Your organizations
             </h2>
             <p className="max-w-2xl text-sm text-white/60">
-              Open an existing workspace or create a new one if you want a
-              separate feedback space.
+              Open a workspace or create a new one.
             </p>
           </div>
           <Link
@@ -38,7 +37,7 @@ export default async function AdminPage() {
                 className="rounded-3xl border border-white/10 bg-white/5 p-5"
               >
                 <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-                  Workspace
+                  Org
                 </p>
                 <h3 className="mt-2 text-lg font-semibold text-white">
                   {organization.name}
@@ -53,7 +52,7 @@ export default async function AdminPage() {
                   href={`/admin/org/${organization.code}`}
                   className="button-surface mt-5 inline-flex items-center px-4 py-2 text-sm font-medium text-white/85 transition hover:text-white"
                 >
-                  Open workspace
+                  Open
                 </Link>
               </article>
             ))
@@ -63,8 +62,7 @@ export default async function AdminPage() {
                 No organizations yet
               </h3>
               <p className="mt-2 max-w-2xl text-sm text-white/60">
-                Create your first workspace to manage participants, levels,
-                votes, and anonymous messages.
+                Create your first workspace.
               </p>
             </article>
           )}

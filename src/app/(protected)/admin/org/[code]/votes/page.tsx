@@ -72,8 +72,7 @@ export default async function AdminOrganizationVotesPage({
           </p>
           <h2 className="mt-3 font-heading text-2xl text-white">Votes</h2>
           <p className="mt-3 text-sm text-white/65">
-            Publish level-scoped votes, decide who can participate, and control
-            who sees live versus final results.
+            Create ballots, choose who votes, and set result visibility.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -103,8 +102,7 @@ export default async function AdminOrganizationVotesPage({
             <div>
               <h3 className="font-heading text-xl text-white">Create vote</h3>
               <p className="mt-2 text-sm text-white/60">
-                Choose the audience first, then decide where live and final
-                results should be visible.
+                Choose the audience and result visibility.
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -157,8 +155,7 @@ export default async function AdminOrganizationVotesPage({
           <div>
             <h3 className="font-heading text-xl text-white">Current votes</h3>
             <p className="mt-2 text-sm text-white/60">
-              Review the audiences and result visibility rules attached to each
-              published vote.
+              Check audience and visibility for each vote.
             </p>
           </div>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
@@ -275,7 +272,7 @@ export default async function AdminOrganizationVotesPage({
           </div>
         ) : (
           <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
-            No votes have been created for this organization yet.
+            No votes yet.
           </div>
         )}
       </article>

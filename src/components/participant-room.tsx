@@ -318,8 +318,7 @@ export default function ParticipantRoom({
                         name="body"
                         rows={5}
                         disabled={channel.status !== "open"}
-                        placeholder="Write a clear, constructive message..."
-                        className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
                       />
                       <button
                         type="submit"

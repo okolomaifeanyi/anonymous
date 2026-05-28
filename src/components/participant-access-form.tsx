@@ -36,18 +36,6 @@ function getIdentifierAutoComplete(identifierType: IdentifierType) {
   return "off";
 }
 
-function getIdentifierPlaceholder(identifierType: IdentifierType) {
-  if (identifierType === "email") {
-    return "person@company.com";
-  }
-
-  if (identifierType === "phone") {
-    return "+234 801 234 5678";
-  }
-
-  return "Enter your approved identifier";
-}
-
 function maskEmail(value: string) {
   const [localPart, domainPart] = value.split("@");
 
@@ -143,12 +131,11 @@ export default function ParticipantAccessForm({
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  placeholder="123456"
                   aria-invalid={error ? true : undefined}
                   aria-describedby={describedBy || undefined}
                   required
                   maxLength={6}
-                  className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+                  className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
                 />
               </div>
 
@@ -193,11 +180,10 @@ export default function ParticipantAccessForm({
                 type="email"
                 inputMode="email"
                 autoComplete="email"
-                placeholder="person@company.com"
                 aria-invalid={error ? true : undefined}
                 aria-describedby={describedBy || undefined}
                 required
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
+                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
               />
             </div>
 
@@ -218,18 +204,17 @@ export default function ParticipantAccessForm({
             >
               {identifierLabel}
             </label>
-            <input
-              id="identifierValue"
-              name="identifierValue"
-              type={inputType}
-              inputMode={inputType === "tel" ? "tel" : undefined}
-              autoComplete={getIdentifierAutoComplete(identifierType)}
-              placeholder={getIdentifierPlaceholder(identifierType)}
-              aria-invalid={error ? true : undefined}
-              aria-describedby={describedBy || undefined}
-              required
-              className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/25"
-            />
+              <input
+                id="identifierValue"
+                name="identifierValue"
+                type={inputType}
+                inputMode={inputType === "tel" ? "tel" : undefined}
+                autoComplete={getIdentifierAutoComplete(identifierType)}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={describedBy || undefined}
+                required
+                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
+              />
           </div>
 
           <button

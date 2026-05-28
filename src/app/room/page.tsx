@@ -45,8 +45,7 @@ export default async function RoomEntryPage({
               id="room-code"
               name="code"
               required
-              placeholder="e.g. pulse"
-              className="w-full rounded-2xl border border-white/10 bg-[#0f141d] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:border-white/30 focus:outline-none"
+              className="w-full rounded-2xl border border-white/10 bg-[#0f141d] px-4 py-3 text-sm text-white focus:border-white/30 focus:outline-none"
             />
             <button
               type="submit"

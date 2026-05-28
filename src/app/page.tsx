@@ -23,7 +23,7 @@ export default function Home() {
         <section className="relative grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <Link
             href="/auth/login"
-            className="button-surface absolute right-0 top-0 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white/65 transition hover:text-white sm:px-5 sm:py-2.5"
+            className="button-surface button-surface-admin absolute right-0 top-0 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white transition sm:px-5 sm:py-2.5"
           >
             Admin sign in
           </Link>
@@ -31,15 +31,14 @@ export default function Home() {
           <div className="space-y-6 pt-10 lg:pt-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.25em] text-white/70">
               <ShieldCheckIcon className="h-4 w-4 text-emerald-300" />
-              Verified anonymous feedback
+              Anonymous voting and feedback
             </div>
             <h1 className="font-heading text-4xl leading-tight md:text-5xl">
-              Controlled internal voting with verified anonymous participation.
+              Anonymous voting and feedback for organizations.
             </h1>
             <p className="max-w-2xl text-base text-white/70 md:text-lg">
-              Give administrators a secure shell to manage organizations, while
-              participants enter dedicated rooms to send honest feedback and
-              vote without public exposure.
+              Admins manage the workspace. Participants join private rooms to
+              vote and send feedback without exposing their identity.
             </p>
             <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
               <span className="inline-flex items-center gap-2">
@@ -59,12 +58,6 @@ export default function Home() {
               >
                 Enter room
                 <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href="/auth/login"
-                className="button-surface inline-flex items-center justify-center gap-3 px-6 py-3 text-sm font-semibold text-white transition"
-              >
-                Admin sign in
               </Link>
             </div>
           </div>

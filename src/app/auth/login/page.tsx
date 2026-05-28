@@ -55,8 +55,7 @@ export default async function LoginPage({
                 name="email"
                 type="email"
                 required
-                placeholder="you@company.com"
-                className="w-full bg-transparent text-sm text-white/90 placeholder:text-white/40 focus:outline-none"
+                className="w-full bg-transparent text-sm text-white/90 focus:outline-none"
               />
             </div>
             <SubmitButton

@@ -31,7 +31,7 @@ export default function AdminShell({
           <div className="space-y-6">
             <header className="space-y-4">
               <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.28em] text-white/70">
-                Admin workspace
+                Admin
               </div>
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="space-y-2">

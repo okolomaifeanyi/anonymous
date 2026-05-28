@@ -16,7 +16,7 @@ export default async function AdminOrganizationLayout({
   return (
     <AdminShell
       title={organization.name}
-      description="This overview is the control point for your organization. Use the admin navigation to manage people, access levels, votes, and anonymous message review."
+      description="Manage people, levels, votes, and messages."
       code={organization.code}
     >
       {children}

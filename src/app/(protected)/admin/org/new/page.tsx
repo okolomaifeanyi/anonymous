@@ -6,7 +6,7 @@ export default function NewAdminOrganizationPage() {
   return (
     <AdminShell
       title="Create organization"
-      description="Set up the organization shell your admins will use to manage participants, levels, votes, and messages."
+      description="Create a new workspace."
     >
       <section className="max-w-2xl rounded-3xl border border-white/10 bg-[#0f141d] p-6">
         <form action={createOrgAction} className="space-y-5">
@@ -21,8 +21,7 @@ export default function NewAdminOrganizationPage() {
               id="organization-name"
               name="name"
               required
-              placeholder="Pulse, Operations Council, Design Forum..."
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/35 focus:border-white/30 focus:outline-none"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-white/30 focus:outline-none"
             />
           </div>
 
