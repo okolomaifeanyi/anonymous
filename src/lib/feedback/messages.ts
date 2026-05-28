@@ -90,6 +90,11 @@ type ToggleMessageRevealInput = {
   revealed: boolean;
 };
 
+type DeleteMessageChannelInput = {
+  organizationId: string;
+  channelId: string;
+};
+
 type ParticipantRoomMessageChannelRow = {
   id: string;
   title: string;
@@ -438,6 +443,43 @@ export async function toggleMessageReveal({
     organizationId,
     revealed,
   });
+}
+
+export async function deleteMessageChannel({
+  organizationId,
+  channelId,
+}: DeleteMessageChannelInput) {
+  const trimmedChannelId = channelId.trim();
+
+  if (!trimmedChannelId) {
+    throw new Error("Message channel id is required.");
+  }
+
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("message_channels")
+    .select("id,organization_id")
+    .eq("id", trimmedChannelId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load message channel: ${error.message}`);
+  }
+
+  if (!data || data.organization_id !== organizationId) {
+    throw new Error("Message channel not found for this organization.");
+  }
+
+  const { error: deleteError } = await supabase
+    .from("message_channels")
+    .delete()
+    .eq("id", trimmedChannelId)
+    .eq("organization_id", organizationId);
+
+  if (deleteError) {
+    throw new Error(`Failed to delete message channel: ${deleteError.message}`);
+  }
 }
 
 export async function listMessageChannels(organizationId: string) {

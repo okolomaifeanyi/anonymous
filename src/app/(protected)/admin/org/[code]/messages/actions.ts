@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requireOwnedOrganization } from "@/lib/feedback/organizations";
 import {
   createMessageChannel,
+  deleteMessageChannel,
   toggleMessageReveal,
 } from "@/lib/feedback/messages";
 import type {
@@ -96,4 +97,27 @@ export async function setMessageReveal(code: string, formData: FormData) {
 
   revalidatePath(`/admin/org/${code}/messages`);
   redirect(buildMessagesPath(code, { status: "message-updated" }));
+}
+
+export async function deleteMessageChannelAction(
+  code: string,
+  formData: FormData,
+) {
+  const organization = await requireOwnedOrganization(code);
+
+  try {
+    await deleteMessageChannel({
+      organizationId: organization.id,
+      channelId: String(formData.get("channelId") ?? ""),
+    });
+  } catch (error) {
+    redirect(
+      buildMessagesPath(code, {
+        error: getErrorMessage(error, "Unable to delete message channel."),
+      }),
+    );
+  }
+
+  revalidatePath(`/admin/org/${code}/messages`);
+  redirect(buildMessagesPath(code, { status: "channel-deleted" }));
 }

@@ -11,8 +11,9 @@ import {
   type OrganizationLevel,
 } from "@/lib/feedback/participants";
 import MessageChannelForm from "@/components/message-channel-form";
+import MessageChannelDeleteForm from "@/components/message-channel-delete-form";
 
-import { addMessageChannel, setMessageReveal } from "./actions";
+import { addMessageChannel, deleteMessageChannelAction, setMessageReveal } from "./actions";
 
 type MessagesPageProps = {
   params: Promise<{ code: string }>;
@@ -139,6 +140,15 @@ export default async function AdminOrganizationMessagesPage({
             role="status"
           >
             Message channel created successfully.
+          </p>
+        ) : null}
+
+        {status === "channel-deleted" ? (
+          <p
+            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+            role="status"
+          >
+            Message channel deleted successfully.
           </p>
         ) : null}
 
@@ -281,6 +291,14 @@ export default async function AdminOrganizationMessagesPage({
                         </dd>
                       </div>
                     </dl>
+
+                    <div className="mt-5 flex justify-end">
+                      <MessageChannelDeleteForm
+                        action={deleteMessageChannelAction.bind(null, code)}
+                        channelId={channel.id}
+                        channelTitle={channel.title}
+                      />
+                    </div>
                   </article>
                 );
               })}

@@ -7,6 +7,7 @@ vi.mock("@/lib/supabase/server", () => ({
 import { createAdminClient } from "@/lib/supabase/server";
 import {
   createMessageChannel,
+  deleteMessageChannel,
   listMessageChannels,
   listParticipantRoomRevealedMessages,
 } from "@/lib/feedback/messages";
@@ -16,6 +17,7 @@ function createMaybeSingleQuery(result: {
   error: { message: string } | null;
 }) {
   return {
+    eq: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockResolvedValue(result),
   };
@@ -39,6 +41,18 @@ function createSingleInsertQuery(result: {
   const select = vi.fn(() => ({ single }));
 
   return { select };
+}
+
+function createDeleteQuery(result: {
+  error: { message: string } | null;
+}) {
+  const deleteQuery = {
+    eq: vi.fn(),
+  };
+  deleteQuery.eq.mockImplementationOnce(() => deleteQuery);
+  deleteQuery.eq.mockImplementationOnce(() => Promise.resolve(result));
+
+  return deleteQuery;
 }
 
 describe("feedback message helpers", () => {
@@ -156,6 +170,39 @@ describe("feedback message helpers", () => {
         organization_id: "org-1",
       },
     ]);
+  });
+
+  it("deletes a channel and leaves cleanup to cascading foreign keys", async () => {
+    const channelLookupQuery = createMaybeSingleQuery({
+      data: {
+        id: "channel-1",
+        organization_id: "org-1",
+      },
+      error: null,
+    });
+    const deleteQuery = createDeleteQuery({ error: null });
+    const from = vi.fn((table: string) => {
+      if (table === "message_channels") {
+        return {
+          select: vi.fn(() => channelLookupQuery),
+          delete: vi.fn(() => deleteQuery),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    });
+
+    vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+
+    await expect(
+      deleteMessageChannel({
+        organizationId: "org-1",
+        channelId: "channel-1",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(deleteQuery.eq).toHaveBeenCalledWith("id", "channel-1");
+    expect(deleteQuery.eq).toHaveBeenCalledWith("organization_id", "org-1");
   });
 
   it("falls back to the legacy channel schema when reveal audience columns are unavailable", async () => {
