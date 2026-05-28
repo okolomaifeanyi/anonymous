@@ -20,6 +20,14 @@ type RoomOrganization = {
   participant_identifier_label: string;
 };
 
+type OwnedOrganizationSummary = {
+  id: string;
+  name: string;
+  code: string;
+  created_at: string;
+  participant_identifier_label: string;
+};
+
 export async function requireOwnedOrganization(code: string) {
   const supabase = await createClient();
   const {
@@ -73,4 +81,28 @@ export async function getOrganizationByCodeForRoom(code: string) {
   }
 
   return data as RoomOrganization;
+}
+
+export async function listOwnedOrganizations() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error("You must be signed in.");
+  }
+
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("id,name,code,created_at,participant_identifier_label")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to load organizations: ${error.message}`);
+  }
+
+  return (data ?? []) as OwnedOrganizationSummary[];
 }
