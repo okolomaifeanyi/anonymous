@@ -12,6 +12,29 @@ import { createClient } from "@/lib/server";
 
 const ROOM_CODE_COOLDOWN_SECONDS = 60;
 
+function formatSupabaseErrorMessage(
+  error: { code?: string; message?: unknown; status?: number } | null | undefined,
+  fallback: string,
+) {
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  if (error?.code && typeof error.status === "number") {
+    return `${fallback} (${error.status}, code: ${error.code})`;
+  }
+
+  if (error?.code) {
+    return `${fallback} (code: ${error.code})`;
+  }
+
+  if (typeof error?.status === "number") {
+    return `${fallback} (${error.status})`;
+  }
+
+  return fallback;
+}
+
 function buildRoomAccessPath(
   code: string,
   params: Record<string, string | undefined>,
@@ -81,7 +104,10 @@ export async function verifyParticipant(code: string, formData: FormData) {
             message:
               error.code === "over_email_send_rate_limit"
                 ? `Email provider rate limit exceeded. Wait ${ROOM_CODE_COOLDOWN_SECONDS} seconds and try again.`
-                : error.message || "Could not send a verification code.",
+                : formatSupabaseErrorMessage(
+                    error,
+                    "Could not send a verification code.",
+                  ),
             ...(error.code === "over_email_send_rate_limit"
               ? { cooldown: String(ROOM_CODE_COOLDOWN_SECONDS) }
               : {}),
@@ -130,7 +156,10 @@ export async function verifyParticipant(code: string, formData: FormData) {
           message:
             error.code === "otp_expired" || error.code === "otp_invalid"
               ? "That code is invalid or expired. Request a new one."
-              : error.message || "Could not verify the code.",
+              : formatSupabaseErrorMessage(
+                  error,
+                  "Could not verify the code.",
+                ),
           step: "code",
           identifier: identifierValue,
         }),

@@ -114,6 +114,24 @@ describe("participant room actions", () => {
     );
   });
 
+  it("falls back to a readable message when Supabase returns a structured error", async () => {
+    mocks.signInWithOtp.mockResolvedValue({
+      error: {
+        code: "unexpected_failure",
+        message: {},
+        status: 500,
+      },
+    });
+
+    const formData = new FormData();
+    formData.set("intent", "request");
+    formData.set("identifierValue", "USER@Example.com");
+
+    await expect(verifyParticipant("pulse", formData)).rejects.toThrow(
+      "REDIRECT:/room/pulse?error=request-failed&message=Could+not+send+a+verification+code.+%28500%2C+code%3A+unexpected_failure%29&step=code&identifier=user%40example.com",
+    );
+  });
+
   it("verifies a code and opens the participant room", async () => {
     mocks.verifyOtp.mockResolvedValue({ error: null });
 

@@ -12,6 +12,29 @@ function buildLoginRedirect(params: Record<string, string>) {
   return `/auth/login?${searchParams.toString()}`;
 }
 
+function formatSupabaseErrorMessage(
+  error: { code?: string; message?: unknown; status?: number } | null | undefined,
+  fallback: string,
+) {
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  if (error?.code && typeof error.status === "number") {
+    return `${fallback} (${error.status}, code: ${error.code})`;
+  }
+
+  if (error?.code) {
+    return `${fallback} (code: ${error.code})`;
+  }
+
+  if (typeof error?.status === "number") {
+    return `${fallback} (${error.status})`;
+  }
+
+  return fallback;
+}
+
 async function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
@@ -72,7 +95,7 @@ export async function requestMagicLink(formData: FormData) {
         message:
           error.code === "over_email_send_rate_limit"
             ? `Email provider rate limit exceeded. Wait ${MAGIC_LINK_COOLDOWN_SECONDS} seconds and try again.`
-            : error.message || "Could not send magic link.",
+            : formatSupabaseErrorMessage(error, "Could not send magic link."),
         ...(error.code === "over_email_send_rate_limit"
           ? { cooldown: String(MAGIC_LINK_COOLDOWN_SECONDS) }
           : {}),
