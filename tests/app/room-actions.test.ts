@@ -68,7 +68,7 @@ describe("participant room actions", () => {
     formData.set("identifierValue", "USER@Example.com");
 
     await expect(verifyParticipant("pulse", formData)).rejects.toThrow(
-      "REDIRECT:/room/pulse?status=code-sent&step=code&identifier=user%40example.com",
+      "REDIRECT:/room/pulse?status=code-sent&cooldown=60&step=code&identifier=user%40example.com",
     );
 
     expect(mocks.findEligibleParticipantByIdentifier).toHaveBeenCalledWith({
@@ -83,6 +83,18 @@ describe("participant room actions", () => {
       },
     });
     expect(mocks.setRoomSession).not.toHaveBeenCalled();
+  });
+
+  it("includes a resend cooldown after sending a verification code", async () => {
+    mocks.signInWithOtp.mockResolvedValue({ error: null });
+
+    const formData = new FormData();
+    formData.set("intent", "request");
+    formData.set("identifierValue", "USER@Example.com");
+
+    await expect(verifyParticipant("pulse", formData)).rejects.toThrow(
+      "REDIRECT:/room/pulse?status=code-sent&cooldown=60&step=code&identifier=user%40example.com",
+    );
   });
 
   it("shows the cooldown count when code sending is rate limited", async () => {

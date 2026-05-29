@@ -28,4 +28,24 @@ describe("ParticipantAccessForm", () => {
 
     expect(screen.getByLabelText("Code")).toHaveAttribute("maxLength", "8");
   });
+
+  it("disables resend while the cooldown counts down", () => {
+    render(
+      <ParticipantAccessForm
+        code="pulse"
+        organizationName="Team Pulse"
+        identifierLabel="Email address"
+        identifierType="email"
+        identifierValue="user@example.com"
+        verificationStep
+        cooldownSeconds={60}
+        error={null}
+        status={null}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Wait 60s to resend" }),
+    ).toBeDisabled();
+  });
 });

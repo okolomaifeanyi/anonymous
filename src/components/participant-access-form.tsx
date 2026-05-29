@@ -1,6 +1,7 @@
 import { verifyParticipant } from "@/app/room/[code]/actions";
 import type { IdentifierType } from "@/lib/feedback/types";
 import SubmitButton from "@/components/ui/submit-button";
+import CooldownSubmitButton from "@/components/ui/cooldown-submit-button";
 import type { ReactNode } from "react";
 
 type ParticipantAccessFormProps = {
@@ -11,6 +12,7 @@ type ParticipantAccessFormProps = {
   identifierValue: string;
   verificationStep: boolean;
   error: string | null;
+  cooldownSeconds?: number;
   rateLimitBanner?: ReactNode;
   rateLimitBannerId?: string;
   status: string | null;
@@ -64,6 +66,7 @@ export default function ParticipantAccessForm({
   identifierValue,
   verificationStep,
   error,
+  cooldownSeconds = 0,
   rateLimitBanner,
   rateLimitBannerId,
   status,
@@ -158,9 +161,10 @@ export default function ParticipantAccessForm({
             <form action={action} className="flex flex-wrap items-center gap-3">
               <input type="hidden" name="intent" value="request" />
               <input type="hidden" name="identifierValue" value={emailValue} />
-              <SubmitButton
+              <CooldownSubmitButton
                 label="Resend"
                 pendingLabel="Sending..."
+                initialCooldown={cooldownSeconds}
                 className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
               />
               <a

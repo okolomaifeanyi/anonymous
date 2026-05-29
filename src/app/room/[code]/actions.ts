@@ -94,6 +94,7 @@ export async function verifyParticipant(code: string, formData: FormData) {
       redirect(
         buildRoomAccessPath(code, {
           status: "code-sent",
+          cooldown: String(ROOM_CODE_COOLDOWN_SECONDS),
           step: "code",
           identifier: identifierValue,
         }),

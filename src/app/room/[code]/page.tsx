@@ -95,10 +95,8 @@ export default async function ParticipantAccessPage({
   const errorMessage = readSearchParam(resolvedSearchParams, "message");
   const cooldown = readSearchParam(resolvedSearchParams, "cooldown");
   const parsedCooldown = Number.parseInt(cooldown ?? "", 10);
-  const rateLimitCooldown =
-    readSearchParam(resolvedSearchParams, "error") === "rate-limited" &&
-    Number.isFinite(parsedCooldown) &&
-    parsedCooldown > 0
+  const hasCooldown =
+    Number.isFinite(parsedCooldown) && parsedCooldown > 0
       ? parsedCooldown
       : 0;
   const emailVerificationEnabled =
@@ -174,8 +172,9 @@ export default async function ParticipantAccessPage({
             identifierType={organization.participant_identifier_type}
             identifierValue={identifierValue ?? ""}
             verificationStep={verificationStep === "code"}
+            cooldownSeconds={hasCooldown}
             error={
-              rateLimitCooldown > 0
+              readSearchParam(resolvedSearchParams, "error") === "rate-limited"
                 ? null
                 : getAccessErrorMessage(
                     readSearchParam(resolvedSearchParams, "error"),
@@ -184,13 +183,13 @@ export default async function ParticipantAccessPage({
                   )
             }
             rateLimitBanner={
-              rateLimitCooldown > 0 ? (
+              readSearchParam(resolvedSearchParams, "error") === "rate-limited" ? (
                 <RateLimitBanner
                   id="participant-access-error"
                   className="mt-6 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
                   prefix="Too many codes were sent. Wait "
                   suffix=" seconds and try again."
-                  initialSeconds={rateLimitCooldown}
+                  initialSeconds={hasCooldown}
                 />
               ) : null
             }
