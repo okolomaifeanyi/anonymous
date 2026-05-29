@@ -51,11 +51,11 @@ function getAccessErrorMessage(
     if (Number.isFinite(parsedCooldown) && parsedCooldown > 0) {
       return (
         message ??
-        `Too many codes were sent. Wait ${parsedCooldown} seconds and try again.`
+        `Email provider rate limit exceeded. Wait ${parsedCooldown} seconds and try again.`
       );
     }
 
-    return message ?? "Too many codes were sent. Wait a minute and try again.";
+    return message ?? "Email provider rate limit exceeded. Wait a minute and try again.";
   }
 
   return null;
@@ -67,7 +67,7 @@ function getAccessStatusMessage(status: string | undefined) {
   }
 
   if (status === "code-sent") {
-    return "We sent a code to your email.";
+    return "Code requested. Check your inbox and spam.";
   }
 
   return null;
@@ -187,7 +187,7 @@ export default async function ParticipantAccessPage({
                 <RateLimitBanner
                   id="participant-access-error"
                   className="mt-6 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
-                  prefix="Too many codes were sent. Wait "
+                  prefix="Email provider rate limit exceeded. Wait "
                   suffix=" seconds and try again."
                   initialSeconds={hasCooldown}
                 />

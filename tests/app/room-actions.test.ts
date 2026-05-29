@@ -110,7 +110,7 @@ describe("participant room actions", () => {
     formData.set("identifierValue", "USER@Example.com");
 
     await expect(verifyParticipant("pulse", formData)).rejects.toThrow(
-      "REDIRECT:/room/pulse?error=rate-limited&message=Too+many+codes+were+sent.+Wait+60+seconds+and+try+again.&cooldown=60&step=code&identifier=user%40example.com",
+      "REDIRECT:/room/pulse?error=rate-limited&message=Email+provider+rate+limit+exceeded.+Wait+60+seconds+and+try+again.&cooldown=60&step=code&identifier=user%40example.com",
     );
   });
 

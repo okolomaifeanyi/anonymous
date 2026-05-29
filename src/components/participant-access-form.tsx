@@ -96,7 +96,7 @@ export default function ParticipantAccessForm({
         <p className="text-sm text-white/65">
           {isEmailFlow
             ? verificationStep
-              ? `We sent a code to ${emailValue ? maskEmail(emailValue) : "your email"}. Enter it below.`
+              ? `Code requested for ${emailValue ? maskEmail(emailValue) : "your email"}. Check inbox and spam.`
               : "Enter your email to get a code."
             : "Enter the approved identifier."}
         </p>

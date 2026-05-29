@@ -68,14 +68,14 @@ export default async function LoginPage({
           </form>
           {sent && (
             <p className="mt-4 text-center text-xs text-emerald-200">
-              Magic link sent. Check your inbox for admin access.
+              Magic link requested. Check your inbox and spam.
             </p>
           )}
           {hasError &&
             (isRateLimited ? (
               <RateLimitBanner
                 className="mt-4 text-center text-xs text-rose-200"
-                prefix="Too many magic links were sent. Wait "
+                prefix="Email provider rate limit exceeded. Wait "
                 suffix=" seconds and try again."
                 initialSeconds={initialCooldown}
               />

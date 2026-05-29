@@ -80,7 +80,7 @@ export async function verifyParticipant(code: string, formData: FormData) {
                 : "request-failed",
             message:
               error.code === "over_email_send_rate_limit"
-                ? `Too many codes were sent. Wait ${ROOM_CODE_COOLDOWN_SECONDS} seconds and try again.`
+                ? `Email provider rate limit exceeded. Wait ${ROOM_CODE_COOLDOWN_SECONDS} seconds and try again.`
                 : error.message || "Could not send a verification code.",
             ...(error.code === "over_email_send_rate_limit"
               ? { cooldown: String(ROOM_CODE_COOLDOWN_SECONDS) }
