@@ -110,6 +110,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --app-surface: #f0f2f5;
+  --app-card: #ffffff;
 }
 
 .dark {
@@ -144,10 +146,12 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --app-surface: #0f141d;
+  --app-card: #0b1018;
 }
 
 @layer base {
-  :where(button, [data-slot="button"], .button-surface) {
+  :where(.button-surface) {
     background-color: var(--button-surface) !important;
     background-image: none !important;
     background-clip: padding-box;
@@ -158,11 +162,11 @@
     text-shadow: none;
   }
 
-  :where(button, [data-slot="button"], .button-surface):not(:disabled):hover {
+  :where(.button-surface):not(:disabled):hover {
     filter: brightness(1.02);
   }
 
-  :where(button, [data-slot="button"], .button-surface):not(:disabled):active {
+  :where(.button-surface):not(:disabled):active {
     transform: translateY(1px);
   }
 
@@ -192,6 +196,8 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  html.dark body {
     background-color: #0b0f15;
     background-image:
       linear-gradient(rgba(11, 15, 21, 0.92), rgba(11, 15, 21, 0.92)),
