@@ -18,10 +18,7 @@ const navItems = [
 ];
 
 function isActivePath(pathname: string, href: string, slug: string) {
-  if (!slug) {
-    return pathname === href;
-  }
-
+  if (!slug) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -46,8 +43,8 @@ export default function OrgAdminNav({ code }: OrgAdminNavProps) {
             className={cn(
               "rounded-full border px-4 py-2 text-sm font-medium transition",
               active
-                ? "border-white/20 bg-white text-[#0b0f15] shadow-lg shadow-white/10"
-                : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white",
+                ? "border-border bg-foreground text-background shadow-sm"
+                : "border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             {label}
