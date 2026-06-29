@@ -108,35 +108,35 @@ export default async function AdminOrganizationMessagesPage({
     <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
       <div className="grid gap-6">
         <section className="space-y-6">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-emerald-200/70">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
             Anonymous review
           </p>
-          <h2 className="mt-3 font-heading text-2xl text-white">Messages</h2>
-          <p className="mt-3 text-sm text-white/65">
+          <h2 className="mt-3 font-heading text-2xl text-foreground">Messages</h2>
+          <p className="mt-3 text-sm text-muted-foreground">
             Create anonymous channels and choose what gets revealed.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <dt className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+            <div className="rounded-2xl border border-border bg-muted/50 p-4">
+              <dt className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                 Channels
               </dt>
-              <dd className="mt-2 text-sm font-medium text-white/85">
+              <dd className="mt-2 text-sm font-medium text-foreground/80">
                 {channels.length}
               </dd>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <dt className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+            <div className="rounded-2xl border border-border bg-muted/50 p-4">
+              <dt className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                 Entries
               </dt>
-              <dd className="mt-2 text-sm font-medium text-white/85">
+              <dd className="mt-2 text-sm font-medium text-foreground/80">
                 {adminVisibleEntries.length}
               </dd>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <dt className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+            <div className="rounded-2xl border border-border bg-muted/50 p-4">
+              <dt className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                 Revealed
               </dt>
-              <dd className="mt-2 text-sm font-medium text-white/85">
+              <dd className="mt-2 text-sm font-medium text-foreground/80">
                 {revealedEntries}
               </dd>
             </div>
@@ -145,7 +145,7 @@ export default async function AdminOrganizationMessagesPage({
 
         {status === "channel-created" ? (
           <p
-            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-100"
             role="status"
           >
             Message channel created successfully.
@@ -154,7 +154,7 @@ export default async function AdminOrganizationMessagesPage({
 
         {status === "channel-deleted" ? (
           <p
-            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-100"
             role="status"
           >
             Message channel deleted successfully.
@@ -163,7 +163,7 @@ export default async function AdminOrganizationMessagesPage({
 
         {status === "message-updated" ? (
           <p
-            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+            className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-100"
             role="status"
           >
             Message visibility updated successfully.
@@ -172,7 +172,7 @@ export default async function AdminOrganizationMessagesPage({
 
         {error ? (
           <p
-            className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
+            className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-100"
             role="alert"
           >
             {error}
@@ -189,17 +189,17 @@ export default async function AdminOrganizationMessagesPage({
       </div>
 
       <div className="grid gap-6">
-        <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
+        <article className="rounded-3xl border border-border bg-[var(--app-surface)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-heading text-xl text-white">
+              <h3 className="font-heading text-xl text-foreground">
                 Current channels
               </h3>
-              <p className="mt-2 text-sm text-white/60">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Who can submit and who can see the reveal.
               </p>
             </div>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
+            <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-muted-foreground/70">
               Newest first
             </span>
           </div>
@@ -212,32 +212,32 @@ export default async function AdminOrganizationMessagesPage({
                 return (
                   <article
                     key={channel.id}
-                    className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
+                    className="rounded-2xl border border-border bg-[var(--app-card)] p-4"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <h4 className="text-sm font-semibold text-white">
+                        <h4 className="text-sm font-semibold text-foreground">
                           {channel.title}
                         </h4>
-                        <p className="mt-2 text-sm text-white/60">
+                        <p className="mt-2 text-sm text-muted-foreground">
                           {channel.prompt}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs">
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
+                        <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-muted-foreground">
                           {channel.status}
                         </span>
                         {createdAt ? (
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/50">
+                          <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-muted-foreground/70">
                             Added {createdAt}
                           </span>
                         ) : null}
                       </div>
                     </div>
 
-                    <dl className="mt-4 grid gap-3 text-sm text-white/65">
+                    <dl className="mt-4 grid gap-3 text-sm text-muted-foreground">
                       <div>
-                        <dt className="text-[11px] uppercase tracking-[0.24em] text-white/40">
+                        <dt className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                           Submit audience
                         </dt>
                         <dd className="mt-2 flex flex-wrap gap-2">
@@ -245,7 +245,7 @@ export default async function AdminOrganizationMessagesPage({
                             (name) => (
                               <span
                                 key={`${channel.id}-submit-${name}`}
-                                className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
+                                className="rounded-full border border-border bg-muted/50 px-3 py-1"
                               >
                                 {name}
                               </span>
@@ -254,7 +254,7 @@ export default async function AdminOrganizationMessagesPage({
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] uppercase tracking-[0.24em] text-white/40">
+                        <dt className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                           Reveal audience
                         </dt>
                         <dd className="mt-2 flex flex-wrap gap-2">
@@ -271,7 +271,7 @@ export default async function AdminOrganizationMessagesPage({
                                     return (
                                       <span
                                         key={`${channel.id}-reveal-participant-${participantId}`}
-                                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
+                                        className="rounded-full border border-border bg-muted/50 px-3 py-1"
                                       >
                                         {label}
                                       </span>
@@ -281,7 +281,7 @@ export default async function AdminOrganizationMessagesPage({
                               : [
                                   <span
                                     key={`${channel.id}-reveal-participant-none`}
-                                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
+                                    className="rounded-full border border-border bg-muted/50 px-3 py-1"
                                   >
                                     None selected
                                   </span>,
@@ -290,7 +290,7 @@ export default async function AdminOrganizationMessagesPage({
                                 (name) => (
                                   <span
                                     key={`${channel.id}-reveal-${name}`}
-                                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1"
+                                    className="rounded-full border border-border bg-muted/50 px-3 py-1"
                                   >
                                     {name}
                                   </span>
@@ -312,21 +312,21 @@ export default async function AdminOrganizationMessagesPage({
               })}
             </div>
           ) : (
-            <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
+            <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted/50 px-5 py-6 text-sm text-muted-foreground">
               No channels yet.
             </div>
           )}
         </article>
 
-        <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
+        <article className="rounded-3xl border border-border bg-[var(--app-surface)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-heading text-xl text-white">Recent entries</h3>
-              <p className="mt-2 text-sm text-white/60">
+              <h3 className="font-heading text-xl text-foreground">Recent entries</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Reveal when needed.
               </p>
             </div>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
+            <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-muted-foreground/70">
               Moderation
             </span>
           </div>
@@ -341,10 +341,10 @@ export default async function AdminOrganizationMessagesPage({
                   <>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-white/40">
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                           {entry.channel_title}
                         </p>
-                        <p className="mt-3 text-sm text-white/80">
+                        <p className="mt-3 text-sm text-foreground/80">
                           {entry.body}
                         </p>
                       </div>
@@ -352,14 +352,14 @@ export default async function AdminOrganizationMessagesPage({
                         <span
                           className={`rounded-full border px-3 py-1 ${
                             entry.revealed
-                              ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-100"
-                              : "border-white/10 bg-white/5 text-white/55"
+                              ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-700 dark:text-emerald-100"
+                              : "border-border bg-muted/50 text-muted-foreground"
                           }`}
                         >
                           {entry.revealed ? "Revealed" : "Hidden"}
                         </span>
                         {createdAt ? (
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/50">
+                          <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-muted-foreground/70">
                             {createdAt}
                           </span>
                         ) : null}
@@ -367,7 +367,7 @@ export default async function AdminOrganizationMessagesPage({
                     </div>
 
                     {entry.revealAudienceType === "participants" ? (
-                      <p className="mt-4 text-sm text-white/45">
+                      <p className="mt-4 text-sm text-muted-foreground/70">
                         Managed by the selected participant.
                       </p>
                     ) : (
@@ -376,7 +376,7 @@ export default async function AdminOrganizationMessagesPage({
                         pendingLabel={
                           entry.revealed ? "Hiding..." : "Revealing..."
                         }
-                        className="mt-4 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+                        className="mt-4 inline-flex items-center rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70"
                       />
                     )}
                   </>
@@ -385,7 +385,7 @@ export default async function AdminOrganizationMessagesPage({
                 return entry.revealAudienceType === "participants" ? (
                   <article
                     key={entry.id}
-                    className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
+                    className="rounded-2xl border border-border bg-[var(--app-card)] p-4"
                   >
                     {content}
                   </article>
@@ -393,7 +393,7 @@ export default async function AdminOrganizationMessagesPage({
                   <form
                     key={entry.id}
                     action={toggleAction}
-                    className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
+                    className="rounded-2xl border border-border bg-[var(--app-card)] p-4"
                   >
                     <input type="hidden" name="messageId" value={entry.id} />
                     <input
@@ -407,7 +407,7 @@ export default async function AdminOrganizationMessagesPage({
               })}
             </div>
           ) : (
-            <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
+            <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted/50 px-5 py-6 text-sm text-muted-foreground">
               No messages yet.
             </div>
           )}

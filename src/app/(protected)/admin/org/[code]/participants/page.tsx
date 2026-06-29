@@ -70,31 +70,31 @@ export default async function AdminOrganizationParticipantsPage({
   return (
     <section className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
       <div className="grid gap-6">
-        <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200/70">
+        <article className="rounded-3xl border border-border bg-[var(--app-surface)] p-6">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-200/70">
             Participant access
           </p>
-          <h2 className="mt-3 font-heading text-2xl text-white">
+          <h2 className="mt-3 font-heading text-2xl text-foreground">
             Approved participants
           </h2>
-          <p className="mt-3 text-sm text-white/65">
+          <p className="mt-3 text-sm text-muted-foreground">
             Only approved people can enter. They sign in with the configured{" "}
             {organization.participant_identifier_label.toLowerCase()}.
           </p>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <dt className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+            <div className="rounded-2xl border border-border bg-muted/50 p-4">
+              <dt className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                 Identifier rule
               </dt>
-              <dd className="mt-2 text-sm font-medium text-white/85">
+              <dd className="mt-2 text-sm font-medium text-foreground/80">
                 {organization.participant_identifier_label}
               </dd>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <dt className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+            <div className="rounded-2xl border border-border bg-muted/50 p-4">
+              <dt className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
                 Active roster
               </dt>
-              <dd className="mt-2 text-sm font-medium text-white/85">
+              <dd className="mt-2 text-sm font-medium text-foreground/80">
                 {participants.length} participant
                 {participants.length === 1 ? "" : "s"}
               </dd>
@@ -104,32 +104,32 @@ export default async function AdminOrganizationParticipantsPage({
 
         <form
           action={action}
-          className="rounded-3xl border border-white/10 bg-[#0f141d] p-6"
+          className="rounded-3xl border border-border bg-[var(--app-surface)] p-6"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-heading text-xl text-white">
+              <h3 className="font-heading text-xl text-foreground">
                 Add participant
               </h3>
-              <p className="mt-2 text-sm text-white/60">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Add one person. Set levels.
               </p>
             </div>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
+            <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-muted-foreground/70">
               {levels.length} level{levels.length === 1 ? "" : "s"} available
             </span>
           </div>
 
           {status === "participant-added" ? (
             <p
-              className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+              className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-100"
               role="status"
             >
               Participant added successfully.
             </p>
           ) : status === "participant-deleted" ? (
             <p
-              className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+              className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-100"
               role="status"
             >
               Participant deleted.
@@ -138,7 +138,7 @@ export default async function AdminOrganizationParticipantsPage({
 
           {error ? (
             <p
-              className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
+              className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-100"
               role="alert"
             >
               {error}
@@ -149,21 +149,21 @@ export default async function AdminOrganizationParticipantsPage({
             <div className="grid gap-2">
               <label
                 htmlFor="displayName"
-                className="text-sm font-medium text-white/80"
+                className="text-sm font-medium text-foreground/80"
               >
                 Display name
               </label>
               <input
                 id="displayName"
                 name="displayName"
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
+                className="rounded-2xl border border-border bg-[var(--app-card)] px-4 py-3 text-sm text-foreground outline-none transition focus:border-border/60"
               />
             </div>
 
             <div className="grid gap-2">
               <label
                 htmlFor="identifierValue"
-                className="text-sm font-medium text-white/80"
+                className="text-sm font-medium text-foreground/80"
               >
                 {organization.participant_identifier_label}
               </label>
@@ -180,12 +180,12 @@ export default async function AdminOrganizationParticipantsPage({
                       : "off"
                 }
                 required
-                className="rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
+                className="rounded-2xl border border-border bg-[var(--app-card)] px-4 py-3 text-sm text-foreground outline-none transition focus:border-border/60"
               />
             </div>
 
             <fieldset className="grid gap-3">
-              <legend className="text-sm font-medium text-white/80">
+              <legend className="text-sm font-medium text-foreground/80">
                 Initial level access
               </legend>
               {levels.length > 0 ? (
@@ -194,20 +194,20 @@ export default async function AdminOrganizationParticipantsPage({
                     <label
                       key={level.id}
                       htmlFor={`level-${level.id}`}
-                      className="flex items-start gap-3 rounded-2xl border border-white/10 bg-[#0b1018] px-4 py-3 text-sm text-white/80"
+                      className="flex items-start gap-3 rounded-2xl border border-border bg-[var(--app-card)] px-4 py-3 text-sm text-foreground/80"
                     >
                       <input
                         id={`level-${level.id}`}
                         name="levelIds"
                         type="checkbox"
                         value={level.id}
-                        className="mt-0.5 h-4 w-4 rounded border-white/15 bg-transparent text-white"
+                        className="mt-0.5 h-4 w-4 rounded border-border bg-transparent text-foreground"
                       />
                       <span>
-                        <span className="block font-medium text-white">
+                        <span className="block font-medium text-foreground">
                           {level.name}
                         </span>
-                        <span className="mt-1 block text-xs text-white/45">
+                        <span className="mt-1 block text-xs text-muted-foreground/70">
                           Audience group #{level.position + 1}
                         </span>
                       </span>
@@ -215,12 +215,12 @@ export default async function AdminOrganizationParticipantsPage({
                   ))}
                 </div>
               ) : (
-                <p className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-white/55">
+                <p className="rounded-2xl border border-dashed border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
                   No levels are available yet. You can still add participants
                   now and group them later from the{" "}
                   <Link
                     href={`/admin/org/${code}/levels`}
-                    className="text-white underline decoration-white/35 underline-offset-4 transition hover:text-cyan-100"
+                    className="text-foreground underline decoration-foreground/35 underline-offset-4 transition hover:text-cyan-700 dark:hover:text-cyan-100"
                   >
                     levels page
                   </Link>
@@ -233,20 +233,20 @@ export default async function AdminOrganizationParticipantsPage({
           <SubmitButton
             label="Add participant"
             pendingLabel="Adding..."
-            className="mt-6 inline-flex items-center rounded-full border border-white/15 bg-white px-5 py-3 text-sm font-semibold text-[#0b0f15] transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-6 inline-flex items-center rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
           />
         </form>
       </div>
 
-      <article className="rounded-3xl border border-white/10 bg-[#0f141d] p-6">
+      <article className="rounded-3xl border border-border bg-[var(--app-surface)] p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="font-heading text-xl text-white">Current roster</h3>
-            <p className="mt-2 text-sm text-white/60">
+            <h3 className="font-heading text-xl text-foreground">Current roster</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               Who can enter and what they can access.
             </p>
           </div>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/50">
+          <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-muted-foreground/70">
             {participants.length} total
           </span>
         </div>
@@ -261,23 +261,23 @@ export default async function AdminOrganizationParticipantsPage({
               return (
                 <article
                   key={participant.id}
-                  className="rounded-2xl border border-white/10 bg-[#0b1018] p-4"
+                  className="rounded-2xl border border-border bg-[var(--app-card)] p-4"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <h4 className="text-sm font-semibold text-white">
+                      <h4 className="text-sm font-semibold text-foreground">
                         {displayTitle}
                       </h4>
-                      <p className="mt-1 text-sm text-white/60">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {participant.identifier_value}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-emerald-100">
+                      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-emerald-700 dark:text-emerald-100">
                         {participant.status}
                       </span>
                       {createdAt ? (
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/50">
+                        <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-muted-foreground/70">
                           Added {createdAt}
                         </span>
                       ) : null}
@@ -289,13 +289,13 @@ export default async function AdminOrganizationParticipantsPage({
                       participant.levels.map((level) => (
                         <span
                           key={level.id}
-                          className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100"
+                          className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-700 dark:text-cyan-100"
                         >
                           {level.name}
                         </span>
                       ))
                     ) : (
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/50">
+                      <span className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground/70">
                         No level assigned
                       </span>
                     )}
@@ -313,7 +313,7 @@ export default async function AdminOrganizationParticipantsPage({
                     <SubmitButton
                       label="Delete"
                       pendingLabel="Deleting..."
-                      className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="inline-flex items-center rounded-full border border-border bg-muted/50 px-4 py-2 text-xs font-semibold text-foreground/70 transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
                     />
                   </form>
                 </article>
@@ -321,7 +321,7 @@ export default async function AdminOrganizationParticipantsPage({
             })}
           </div>
         ) : (
-          <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-5 py-6 text-sm text-white/55">
+          <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted/50 px-5 py-6 text-sm text-muted-foreground">
             No participants yet.
           </div>
         )}
