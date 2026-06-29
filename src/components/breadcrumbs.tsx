@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { ChevronRightIcon, HomeIcon } from "@heroicons/react/24/outline";
 
 import ThemeToggle from "@/components/theme-toggle";
-import { cn } from "@/lib/utils";
 
 const labelMap: Record<string, string> = {
   admin: "Admin",
